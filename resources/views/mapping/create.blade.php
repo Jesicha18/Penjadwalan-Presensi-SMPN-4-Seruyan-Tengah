@@ -187,7 +187,7 @@
             "Informatika": 3,
             "PPKn": 3,
             "IPS": 4,
-            "Prakarya": 2,
+            "Prakarya": 3,
             "Agama": 3,
             "Bahasa Inggris": 4
         };

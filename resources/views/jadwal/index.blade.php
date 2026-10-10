@@ -142,18 +142,33 @@
                     <div class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between flex-wrap gap-4">
                         
                         <!-- Bagian Form Filter (GET) -->
-                        <form id="form-filter-jadwal" method="GET" action="{{ route('jadwal.index') }}" class="flex items-center gap-2">
-                            <input type="text" id="input-tahun" name="tahun_ajaran" value="{{ request('tahun_ajaran', $tahunAktif ?? '') }}" class="px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 w-32" placeholder="Cth: 2026/2027" maxlength="9">
-                            
-                            <select id="input-semester" name="semester" class="px-3 py-1.5 text-xs border border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 bg-white">
-                                <option value="" disabled {{ empty(request('semester', $semesterAktif ?? '')) ? 'selected' : '' }}>-- Semester --</option>
-                                <option value="Ganjil" {{ (request('semester', $semesterAktif ?? '') == 'Ganjil') ? 'selected' : '' }}>Ganjil</option>
-                                <option value="Genap" {{ (request('semester', $semesterAktif ?? '') == 'Genap') ? 'selected' : '' }}>Genap</option>
-                            </select>
-                            
-                            <button type="submit" class="px-3.5 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold rounded-xl transition-all">
-                                Filter
-                            </button>
+                        <form id="form-filter-jadwal" method="GET" action="{{ route('jadwal.index') }}" onsubmit="return validateFormFilter(event)" class="flex flex-col gap-1">
+                            <div class="flex items-center gap-2">
+                                <input type="text" id="input-tahun" name="tahun_ajaran" value="{{ request('tahun_ajaran', $tahunAktif ?? '') }}" class="px-3 py-1.5 text-xs border @error('tahun_ajaran') border-red-500 @else border-gray-200 @enderror rounded-xl focus:outline-none focus:border-indigo-500 w-32" placeholder="Cth: 2026/2027" pattern="\d{4}/\d{4}" title="Format tahun ajaran harus YYYY/YYYY (Cth: 2026/2027)" required maxlength="9">
+                                
+                                <!-- Dropdown Semester Modern dengan Ikon Custom -->
+                                <div class="relative inline-block">
+                                <div class="relative inline-block">
+                                    <select id="input-semester" name="semester" class="appearance-none px-3.5 py-1.5 pr-8 text-xs font-medium border border-gray-200 rounded-xl focus:outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 bg-white text-gray-700 shadow-sm transition-all duration-200 ease-in-out cursor-pointer hover:border-gray-300" style="border-radius: 12px;" required>
+                                        <option value="" disabled {{ empty(request('semester', $semesterAktif ?? '')) ? 'selected' : '' }}>-- Semester --</option>
+                                        <option value="Ganjil" {{ (request('semester', $semesterAktif ?? '') == 'Ganjil') ? 'selected' : '' }}>Ganjil</option>
+                                        <option value="Genap" {{ (request('semester', $semesterAktif ?? '') == 'Genap') ? 'selected' : '' }}>Genap</option>
+                                    </select>
+                                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2.5 text-gray-400">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path></svg>
+                                    </div>
+                                </div>
+                                </div>
+                                
+                                <button type="submit" class="px-3.5 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold rounded-xl transition-all shadow-sm">
+                                    Filter
+                                </button>
+                            </div>
+
+                            <!-- Pesan Error Validasi dari Laravel -->
+                            @error('tahun_ajaran')
+                                <span class="text-red-500 text-[10px] mt-0.5 ml-1">{{ $message }}</span>
+                            @enderror
                         </form>
 
                         <!-- Form POST untuk Generate Data dengan Efek Loading -->
@@ -178,6 +193,23 @@
 
                     <!-- Script Validasi, Input Hidden, & Loading State -->
                     <script>
+                        function validateFormFilter(event) {
+                            const tahunInput = document.getElementById('input-tahun').value;
+                            const parts = tahunInput.split('/');
+                            
+                            if (parts.length === 2) {
+                                const th1 = parseInt(parts[0]);
+                                const th2 = parseInt(parts[1]);
+                                
+                                if (th2 !== th1 + 1) {
+                                    event.preventDefault();
+                                    alert('Tahun ajaran harus berurutan, contoh: 2026/2027 (bukan rentang tahun yang jauh seperti ' + tahunInput + ').');
+                                    return false;
+                                }
+                            }
+                            return true;
+                        }
+
                         function prosesGenerate(event) {
                             // Ambil nilai dari input filter yang ada di halaman
                             const tahunAjaranEl = document.getElementById('input-tahun');
@@ -198,6 +230,18 @@
                                 event.preventDefault(); // Batalkan submit form
                                 alert('Silakan pilih dan terapkan (Filter) Tahun Ajaran dan Semester terlebih dahulu!');
                                 return;
+                            }
+
+                            // Validasi urutan tahun ajaran saat generate
+                            const parts = tahun.split('/');
+                            if (parts.length === 2) {
+                                const th1 = parseInt(parts[0]);
+                                const th2 = parseInt(parts[1]);
+                                if (th2 !== th1 + 1) {
+                                    event.preventDefault();
+                                    alert('Tahun ajaran harus berurutan, contoh: 2026/2027.');
+                                    return;
+                                }
                             }
 
                             // Masukkan nilainya ke input hidden form generate
