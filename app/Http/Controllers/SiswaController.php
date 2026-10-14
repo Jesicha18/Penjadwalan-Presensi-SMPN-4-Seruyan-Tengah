@@ -187,76 +187,75 @@ class SiswaController extends Controller
     /**
      * Menampilkan halaman manajemen kenaikan kelas.
      */
-    public function naikKelasIndex(Request $request)
-    {
-        $kelasList = Kelas::orderBy('tingkat', 'asc')->orderBy('nama_kelas', 'asc')->get();
-        $selectedKelasId = $request->get('kelas_id');
-        $siswaList = [];
-        $listKelasTujuan = collect();
+public function naikKelasIndex(Request $request)
+{
+    $kelasList = Kelas::orderBy('tingkat', 'asc')->orderBy('nama_kelas', 'asc')->get();
+    $selectedKelasId = $request->get('kelas_id');
+    $siswaList = [];
+    $listKelasTujuan = collect();
+    $kelasAsal = null;
 
-        if ($selectedKelasId) {
-            $siswaList = Siswa::where('kelas_id', $selectedKelasId)->get();
-            $kelasAsal = Kelas::find($selectedKelasId);
+    if ($selectedKelasId) {
+        $siswaList = Siswa::where('kelas_id', $selectedKelasId)->get();
+        $kelasAsal = Kelas::find($selectedKelasId);
 
-            if ($kelasAsal) {
-                // Tentukan tingkat tujuan berdasarkan tingkat kelas asal
+        if ($kelasAsal) {
+            // Jika kelas 9, tidak perlu cari kelas tingkat di atasnya, langsung arahkan ke kelulusan/alumni
+            if ($kelasAsal->tingkat < 9) {
                 $tingkatTujuan = $kelasAsal->tingkat + 1;
                 
-                // Ambil hanya kelas yang tingkatnya di atas kelas asal dengan urutan tingkat & nama kelas
                 $listKelasTujuan = Kelas::where('tingkat', $tingkatTujuan)
                                         ->orderBy('tingkat', 'asc')
                                         ->orderBy('nama_kelas', 'asc')
                                         ->get();
             }
         }
-
-        return view('siswa.naik-kelas', compact('kelasList', 'selectedKelasId', 'siswaList', 'listKelasTujuan'));
     }
+
+    return view('siswa.naik-kelas', compact('kelasList', 'selectedKelasId', 'siswaList', 'listKelasTujuan', 'kelasAsal'));
+}
 
     /**
      * Memproses siswa yang naik kelas secara massal
      */
     public function prosesNaikKelas(Request $request)
-    {
-        $request->validate([
-            'siswa_ids' => 'required|array',
-            'kelas_tujuan_id' => 'required',
-        ]);
+{
+    $request->validate([
+        'siswa_ids' => 'required|array',
+        'kelas_tujuan_id' => 'required',
+    ]);
 
-        $kelasTujuanId = $request->kelas_tujuan_id;
+    $kelasTujuanId = $request->kelas_tujuan_id;
 
-        foreach ($request->siswa_ids as $siswaId) {
-            $siswa = Siswa::with('kelas')->find($siswaId);
+    foreach ($request->siswa_ids as $siswaId) {
+        $siswa = Siswa::with('kelas')->find($siswaId);
 
-            if ($kelasTujuanId === 'lulus') {
-                // Pastikan hanya kelas 9 yang bisa lulus
-                if ($siswa->kelas && $siswa->kelas->tingkat != 9) {
-                    return back()->with('error', 'Hanya siswa tingkat 9 yang dapat diluluskan!');
+        if ($kelasTujuanId === 'lulus') {
+            // Ubah status menjadi 'Lulus' agar terbaca oleh AlumniController
+            $siswa->update([
+                'status' => 'Lulus',
+                'kelas_id' => null
+            ]);
+        } else {
+            $kelasTujuan = Kelas::find($kelasTujuanId);
+            
+            // Validasi tingkat untuk kelas 7 dan 8
+            if ($siswa->kelas && $kelasTujuan) {
+                if ($siswa->kelas->tingkat == 7 && $kelasTujuan->tingkat != 8) {
+                    return back()->with('error', 'Siswa kelas 7 hanya bisa naik ke tingkat 8!');
                 }
-                $siswa->update(['status' => 'Alumni', 'kelas_id' => null]);
-            } else {
-                $kelasTujuan = Kelas::find($kelasTujuanId);
-                
-                // Validasi tingkat: Kelas 7 -> 8, Kelas 8 -> 9
-                if ($siswa->kelas && $kelasTujuan) {
-                    if ($siswa->kelas->tingkat == 7 && $kelasTujuan->tingkat != 8) {
-                        return back()->with('error', 'Siswa kelas 7 hanya bisa naik ke tingkat 8!');
-                    }
-                    if ($siswa->kelas->tingkat == 8 && $kelasTujuan->tingkat != 9) {
-                        return back()->with('error', 'Siswa kelas 8 hanya bisa naik ke tingkat 9!');
-                    }
-                    if ($siswa->kelas->tingkat == 9) {
-                        return back()->with('error', 'Siswa kelas 9 harus dipindahkan ke menu kelulusan/alumni!');
-                    }
+                if ($siswa->kelas->tingkat == 8 && $kelasTujuan->tingkat != 9) {
+                    return back()->with('error', 'Siswa kelas 8 hanya bisa naik ke tingkat 9!');
                 }
-
-                $siswa->update([
-                    'kelas_id' => $kelasTujuanId,
-                    'status' => 'Aktif'
-                ]);
             }
+
+            $siswa->update([
+                'kelas_id' => $kelasTujuanId,
+                'status' => 'Aktif'
+            ]);
         }
-        
-        return redirect()->back()->with('success', 'Data kenaikan kelas berhasil diproses.');
     }
+    
+    return redirect()->back()->with('success', 'Data kenaikan kelas / kelulusan berhasil diproses.');
+}
 }

@@ -18,7 +18,7 @@ use App\Http\Controllers\BebanMengajarController;
 use App\Http\Controllers\SlotWaktuController;
 use App\Http\Controllers\MappingPengampuController;
 use App\Http\Controllers\JadwalPelajaranController;
-
+use App\Http\Controllers\PresensiSiswaController;
 
 
 // Route Login
@@ -26,6 +26,12 @@ Route::get('/', [AuthController::class, 'showLoginForm']);
 Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
+
+Route::get('/guru/jadwal/{jadwalId}/presensi-siswa', [PresensiSiswaController::class, 'create'])
+    ->name('guru.presensi-siswa.create');
+
+Route::post('/guru/jadwal/{jadwalId}/presensi-siswa', [PresensiSiswaController::class, 'store'])
+    ->name('guru.presensi-siswa.store');
 
 // Route Lupa & Reset Password via Email
 Route::get('/forgot-password', [ForgotPasswordController::class, 'showLinkRequestForm'])->name('password.request');
@@ -107,6 +113,14 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/kepala-sekolah/mata-pelajaran', [KepalaSekolahController::class, 'indexMapel'])->name('kepala-sekolah.mapel');
     Route::get('/kepala-sekolah/pengguna-sistem', [KepalaSekolahController::class, 'indexUser'])->name('kepala-sekolah.user');
 
+    // Halaman Melihat Jadwal Pelajaran (Kepala Sekolah)
+    Route::get('/kepala-sekolah/melihat-jadwal', [KepalaSekolahController::class, 'melihatJadwal'])
+        ->name('kepala-sekolah.jadwal.cetak');
+
+    // Halaman Melihat Rekap Presensi Bulanan (Kepala Sekolah)
+    Route::get('/kepala-sekolah/melihat-rekap', [KepalaSekolahController::class, 'melihatRekapPresensi'])
+        ->name('kepala-sekolah.presensi');
+
     // GURU PROFILE
     Route::get('/guru/profile', [GuruController::class, 'editProfile'])->name('guru.profile');
     Route::put('/guru/profile', [GuruController::class, 'updateProfile'])->name('guru.profile.update');
@@ -127,6 +141,13 @@ Route::middleware(['auth'])->group(function () {
     Route::put('/guru/presensi/{presensiGuru}', [GuruController::class, 'updatePresensi'])->name('guru.presensi.update');
 
     Route::get('/guru/rekap-presensi', [RekapPresensiController::class, 'index'])->name('presensi.rekap');
+
+    // EDIT PRESENSI SISWA
+    Route::get('/presensi-siswa/{presensiId}/edit', [PresensiSiswaController::class, 'edit'])
+        ->name('presensi-siswa.edit');
+
+    Route::put('/presensi-siswa/{presensiId}', [PresensiSiswaController::class, 'update'])
+        ->name('presensi-siswa.update');
 
     // NAIK KELAS 
     Route::get('/siswa/naik-kelas', [SiswaController::class, 'naikKelasIndex'])->name('siswa.naik-kelas');
@@ -156,13 +177,15 @@ Route::middleware(['auth'])->group(function () {
     // PENGAMPU 
     Route::resource('mapping', MappingPengampuController::class);
 
+    // JADWAL PELAJARAN
+    Route::get('/jadwal', [JadwalPelajaranController::class, 'index'])->name('jadwal.index');
+    Route::get('/jadwal-pelajaran/show', [JadwalPelajaranController::class, 'show'])->name('jadwal-pelajaran.show');
+    Route::post('/jadwal-pelajaran/generate', [JadwalPelajaranController::class, 'generate'])->name('jadwal.generate'); 
 
-    // NAMA FILENYA BUAT JADWAL
-Route::get('/jadwal', [JadwalPelajaranController::class, 'index'])->name('jadwal.index');
+    Route::get('/guru/jadwal-mengajar', [GuruController::class, 'jadwalMengajar'])
+        ->name('guru.jadwal');
 
-// 2. Ini khusus untuk halaman Matriks Grid Jadwal
-Route::get('/jadwal-pelajaran/show', [JadwalPelajaranController::class, 'show'])->name('jadwal-pelajaran.show');
+    Route::get('/guru/presensi-siswa', [PresensiSiswaController::class, 'index'])
+        ->name('guru.presensi-siswa.index');
 
-// 3. Proses generate data (biasanya method POST dari tombol form di halaman modul)
-Route::post('/jadwal-pelajaran/generate', [JadwalPelajaranController::class, 'generate'])->name('jadwal.generate'); 
 });

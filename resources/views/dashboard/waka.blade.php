@@ -4,46 +4,79 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Waka Kurikulum - SMPN 4 Seruyan Tengah</title>
+<!-- Favicon HD untuk Tab Browser -->
+<link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/logo-smpn4.png') }}">
+<link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/logo-smpn4.png') }}">    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        /* Custom scrollbar halus */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
 </head>
-<body class="bg-[#F8F9FA] font-sans antialiased text-gray-800">
+<body class="bg-[#F8FAFC] antialiased text-slate-800">
 
     <div class="flex h-screen overflow-hidden">
         
-        <!-- 1. SIDEBAR KIRI -->
-        <aside class="w-64 bg-white border-r border-gray-100 flex flex-col justify-between p-6 shrink-0">
+        <!-- ================= 1. SIDEBAR KIRI (DARK DEEP BLUE) ================= -->
+        <aside class="w-64 bg-[#0F5EA3] text-white flex flex-col justify-between p-5 shrink-0 shadow-xl">
             <div>
-                <div class="flex items-center space-x-3 mb-10">
-                    <div class="w-9 h-9 bg-indigo-600 rounded-xl flex items-center text-white justify-center font-bold shadow-md shadow-indigo-100">
-                        S
-                    </div>
-                    <div>
-                        <h1 class="text-xs font-bold text-gray-900 tracking-wider">SMPN 4 SERUYAN</h1>
-                        <p class="text-[10px] text-gray-400 truncate max-w-[130px]">{{ Auth::user()->email }}</p>
-                    </div>
-                </div>
-
+                <!-- Brand Header -->
+<!-- User Profile Header / Logo Sekolah -->
+<div class="flex items-center space-x-3 mb-8 px-2">
+    <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center overflow-hidden shadow-md p-1 shrink-0">
+        <img src="{{ asset('images/logo-smpn4.png') }}" alt="Logo SMPN 4 Seruyan Tengah" class="w-full h-full object-contain">
+    </div>
+    <div>
+        <h1 class="text-xs font-bold tracking-wider text-white">SMPN 4 SERUYAN</h1>
+        <p class="text-[10px] text-blue-200 truncate max-w-[130px] font-medium">{{ Auth::user()->email ?? 'kurikulum@smpn4.sch.id' }}</p>
+    </div>
+</div>
                 <!-- Navigasi Menu -->
                 <div class="space-y-6">
                     <div>
-                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-3">Menu Utama</p>
+                        <p class="text-[10px] font-bold text-blue-200 uppercase tracking-widest px-3 mb-2.5 opacity-80">Menu Utama</p>
                         <nav class="space-y-1">
-                            <a href="{{ route('dashboard.waka') }}" class="flex items-center space-x-3 px-3.5 py-2.5 text-indigo-500 hover:bg-indigo-50 hover:text-indigo-900 rounded-xl text-xs font-medium transition-all duration-300 ease-in-out">
-                                <svg class="w-4 h-4 transition-transform duration-300 ease-in-out group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                            <!-- Dashboard Active Pill -->
+                            <a href="{{ route('dashboard.waka') }}" class="flex items-center space-x-3 px-3.5 py-2.5 bg-[#2582E5] text-white rounded-xl text-xs font-semibold shadow-md transition-all">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
                                 <span>Dashboard</span>
                             </a>
+                            
                             <!-- Profil Saya -->
-                            <a href="{{ route('waka.profile') }}" class="flex items-center space-x-3 px-3.5 py-2.5 text-gray-500 hover:bg-gray-50 hover:text-gray-900 rounded-xl text-xs font-medium transition-all duration-300 ease-in-out">
+                            <a href="{{ route('waka.profile') }}" class="flex items-center space-x-3 px-3.5 py-2.5 text-blue-100 hover:bg-white/10 hover:text-white rounded-xl text-xs font-medium transition-all">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                                 <span>Profil Saya</span>
                             </a>
-                            <!-- Menu Khusus "Buat Jadwal" (Pusat Kartu Modul & Generator) -->
-                            <a href="{{ route('jadwal.index') }}" class="flex items-center space-x-3 px-3.5 py-2.5 text-gray-500 hover:bg-gray-50 hover:text-gray-900 rounded-xl text-xs font-medium transition-all duration-300 ease-in-out">
+
+                            <!-- Buat Jadwal -->
+                            <a href="{{ route('jadwal.index') }}" class="flex items-center space-x-3 px-3.5 py-2.5 text-blue-100 hover:bg-white/10 hover:text-white rounded-xl text-xs font-medium transition-all">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                 <span>Buat Jadwal</span>
                             </a>
-                            <!-- Menu Utama Jadwal Pelajaran (Arsip/Hasil Jadi) -->
-                            <a href="{{ route('jadwal-pelajaran.show') }}" class="flex items-center space-x-3 px-3.5 py-2.5 text-gray-500 hover:bg-gray-50 hover:text-gray-900 rounded-xl text-xs font-medium transition-all duration-300 ease-in-out">
+
+                            <!-- Jadwal Pelajaran -->
+                            <a href="{{ route('jadwal-pelajaran.show') }}" class="flex items-center space-x-3 px-3.5 py-2.5 text-blue-100 hover:bg-white/10 hover:text-white rounded-xl text-xs font-medium transition-all">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                 <span>Jadwal Pelajaran</span>
                             </a>
@@ -51,40 +84,35 @@
                     </div>
 
                     <div>
-                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-3">Master Data</p>
+                        <p class="text-[10px] font-bold text-blue-200 uppercase tracking-widest px-3 mb-2.5 opacity-80">Master Data</p>
                         <nav class="space-y-1">
-                            <a href="{{ route('guru.index') }}" class="flex items-center space-x-3 px-3.5 py-2.5 text-gray-500 hover:bg-gray-50 hover:text-gray-900 rounded-xl text-xs font-medium transition-all duration-300 ease-in-out">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-                                </svg>
+                            <a href="{{ route('guru.index') }}" class="flex items-center space-x-3 px-3.5 py-2.5 text-blue-100 hover:bg-white/10 hover:text-white rounded-xl text-xs font-medium transition-all">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                                 <span>Data Guru</span>
                             </a>
 
-                            <a href="{{ route('kelas.index') }}" class="flex items-center space-x-3 px-3.5 py-2.5 text-gray-500 hover:bg-gray-50 hover:text-gray-900 rounded-xl text-xs font-medium transition">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011 1h2a1 1 0 011 1v5m-4 0h4"/>
-                                </svg>
+                            <a href="{{ route('kelas.index') }}" class="flex items-center space-x-3 px-3.5 py-2.5 text-blue-100 hover:bg-white/10 hover:text-white rounded-xl text-xs font-medium transition-all">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011 1h2a1 1 0 011 1v5m-4 0h4"/></svg>
                                 <span>Data Kelas</span>
                             </a>
-                            <!-- Menu Naik Kelas -->
-                            <a href="{{ route('siswa.naik-kelas') }}" class="flex items-center space-x-3 px-3 py-2.5 text-gray-500 hover:bg-gray-50 hover:text-gray-900 rounded-xl text-xs font-medium transition">
+
+                            <a href="{{ route('siswa.naik-kelas') }}" class="flex items-center space-x-3 px-3.5 py-2.5 text-blue-100 hover:bg-white/10 hover:text-white rounded-xl text-xs font-medium transition-all">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
                                 <span>Naik Kelas</span>
                             </a>
-                            <a href="{{ route('siswa.index') }}" class="flex items-center space-x-3 px-3.5 py-2.5 text-gray-500 hover:bg-gray-50 hover:text-gray-900 rounded-xl text-xs font-medium transition">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 01-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-                                </svg>
+
+                            <a href="{{ route('siswa.index') }}" class="flex items-center space-x-3 px-3.5 py-2.5 text-blue-100 hover:bg-white/10 hover:text-white rounded-xl text-xs font-medium transition-all">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                                 <span>Data Siswa</span>
                             </a>
-                            <a href="{{ route('alumni.index') }}" class="flex items-center space-x-3 px-3.5 py-2.5 text-gray-500 hover:bg-indigo-50/50 hover:text-indigo-600 rounded-xl text-xs font-medium transition-all duration-200 group">
-                                <svg class="w-4 h-4 text-gray-400 group-hover:text-indigo-600 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+
+                            <a href="{{ route('alumni.index') }}" class="flex items-center space-x-3 px-3.5 py-2.5 text-blue-100 hover:bg-white/10 hover:text-white rounded-xl text-xs font-medium transition-all">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                                 <span>Data Alumni</span>
                             </a>
-                            <a href="{{ route('mapel.index') }}" class="flex items-center space-x-3 px-3.5 py-2.5 text-gray-500 hover:bg-gray-50 hover:text-gray-900 rounded-xl text-xs font-medium transition">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18 18.247 18 16.5 18c-1.746 0-3.332 1.253-4.5 1.253"/>
-                                </svg>
+
+                            <a href="{{ route('mapel.index') }}" class="flex items-center space-x-3 px-3.5 py-2.5 text-blue-100 hover:bg-white/10 hover:text-white rounded-xl text-xs font-medium transition-all">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18 18.247 18 16.5 18c-1.746 0-3.332 1.253-4.5 1.253"/></svg>
                                 <span>Mata Pelajaran</span>
                             </a>
                         </nav>
@@ -93,10 +121,10 @@
             </div>
 
             <!-- Tombol Logout -->
-            <div>
+            <div class="pt-4 border-t border-white/10">
                 <form action="{{ route('logout') }}" method="POST">
                     @csrf
-                    <button type="submit" class="w-full flex items-center space-x-3 px-3 py-2.5 text-rose-500 hover:bg-rose-50 rounded-xl text-xs font-semibold transition">
+                    <button type="submit" class="w-full flex items-center space-x-3 px-3 py-2.5 text-rose-200 hover:bg-rose-500/20 hover:text-rose-100 rounded-xl text-xs font-semibold transition">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
                         <span>Keluar Akun</span>
                     </button>
@@ -104,93 +132,102 @@
             </div>
         </aside>
 
-        <!-- 2. KONTEN UTAMA TENGAH -->
-        <main class="flex-1 overflow-y-auto p-8">
-            <!-- Header Atas -->
-            <div class="flex justify-between items-center mb-8">
+        <!-- ================= 2. KONTEN UTAMA TENGAH ================= -->
+        <main class="flex-1 overflow-y-auto p-6 md:p-8 space-y-6">
+            
+            <!-- Top Header Area -->
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
-                    <h2 class="text-xl font-bold text-gray-900">Dashboard Kurikulum</h2>
-                    <p class="text-xs text-gray-400 mt-0.5">Selamat datang kembali, Waka Kurikulum SMPN 4 Seruyan Tengah.</p>
+                    <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Dashboard</h2>
+                    <p class="text-xs text-slate-400 mt-0.5">Kelola dan pantau seluruh operasional akademik SMPN 4 Seruyan Tengah.</p>
                 </div>
             </div>
 
-            <!-- Quick Overview Cards -->
-            <div class="mb-8">
-                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Ringkasan Akademik</h3>
-                <div class="grid grid-cols-4 gap-4">
-                    <!-- Card 1: Data Guru -->
-                    <a href="{{ route('guru.index') }}" class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden hover:shadow-md hover:border-amber-100 transition block">
-                        <div class="w-8 h-8 bg-amber-50 text-amber-500 rounded-xl flex items-center justify-center font-bold text-xs mb-3">👨‍🏫</div>
-                        <h4 class="text-sm font-bold text-gray-800">Data Guru</h4>
-                        <p class="text-[11px] text-gray-400 mt-0.5">{{ $jumlahGuru ?? 0 }} Guru Terdaftar</p>
-                        <div class="mt-4">
-                            <span class="text-[10px] bg-amber-50 text-amber-600 font-semibold px-2.5 py-1 rounded-lg">Kelola Guru</span>
-                        </div>
-                    </a>
-                    
-                    <!-- Card 2: Data Kelas -->
-                    <a href="{{ route('kelas.index') }}" class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden hover:shadow-md hover:border-emerald-100 transition block">
-                        <div class="w-8 h-8 bg-emerald-50 text-emerald-500 rounded-xl flex items-center justify-center font-bold text-xs mb-3">🏫</div>
-                        <h4 class="text-sm font-bold text-gray-800">Data Kelas</h4>
-                        <p class="text-[11px] text-gray-400 mt-0.5">{{ $jumlahKelas ?? 0 }} Kelas Aktif</p>
-                        <div class="mt-4">
-                            <span class="text-[10px] bg-emerald-50 text-emerald-600 font-semibold px-2.5 py-1 rounded-lg">Kelola Kelas</span>
-                        </div>
-                    </a>
-
-                    <!-- Card 3: Data Siswa (Baru) -->
-                    <a href="{{ route('siswa.index') }}" class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden hover:shadow-md hover:border-blue-100 transition block">
-                        <div class="w-8 h-8 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center font-bold text-xs mb-3">🎓</div>
-                        <h4 class="text-sm font-bold text-gray-800">Data Siswa</h4>
-                        <p class="text-[11px] text-gray-400 mt-0.5">{{ $jumlahSiswa ?? 0 }} Siswa Aktif</p>
-                        <div class="mt-4">
-                            <span class="text-[10px] bg-blue-50 text-blue-600 font-semibold px-2.5 py-1 rounded-lg">Kelola Siswa</span>
-                        </div>
-                    </a>
-
-                    <!-- Card 4: Mata Pelajaran -->
-                    <a href="{{ route('mapel.index') }}" class="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden hover:shadow-md hover:border-indigo-100 transition block">
-                        <div class="w-8 h-8 bg-indigo-50 text-indigo-500 rounded-xl flex items-center justify-center font-bold text-xs mb-3">📚</div>
-                        <h4 class="text-sm font-bold text-gray-800">Mata Pelajaran</h4>
-                        <p class="text-[11px] text-gray-400 mt-0.5">{{ $jumlahMapel ?? 0 }} Mapel Tersedia</p>
-                        <div class="mt-4">
-                            <span class="text-[10px] bg-indigo-50 text-indigo-600 font-semibold px-2.5 py-1 rounded-lg">Kelola Mapel</span>
-                        </div>
-                    </a>
+            <!-- HERO WELCOME BANNER (Tanpa statistik double) -->
+            <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0C4A80] via-[#1162A8] to-[#1E7CD0] p-6 md:p-8 text-white shadow-lg">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div>
+                        <h1 class="text-2xl font-bold tracking-tight">Selamat Datang, Wakasek Kurikulum! 👋</h1>
+                        <p class="text-blue-100 text-xs mt-1">Semangat hari ini!</p>
+                    </div>
+                    <div>
+                        <span class="bg-white/10 backdrop-blur-md px-4 py-2.5 rounded-xl text-xs font-semibold text-white border border-white/20 inline-flex items-center gap-2">
+                            📅 {{ \Carbon\Carbon::now()->isoFormat('D MMMM YYYY') }}
+                        </span>
+                    </div>
                 </div>
             </div>
 
-            <!-- Bagian Status Penjadwalan -->
-            <div>
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">Status Penjadwalan & Algoritma</h3>
+            <!-- MAIN STAT CARDS (4 Modul - Tanpa Garis Bawah) -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+    <!-- Card 1: Data Guru (Soft Blue) -->
+    <a href="{{ route('guru.index') }}" class="bg-blue-50/60 p-5 rounded-2xl border border-blue-100 shadow-sm hover:shadow-md transition-all group block">
+        <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold text-blue-600 uppercase tracking-wider">Guru Terdaftar</span>
+        </div>
+        <div class="mt-3">
+            <h3 class="text-2xl font-black text-slate-800 group-hover:text-blue-600 transition-colors">{{ $jumlahGuru ?? 0 }}</h3>
+            <p class="text-[11px] text-slate-500 mt-0.5">Kelola data kepegawaian guru</p>
+        </div>
+    </a>
+
+    <!-- Card 2: Data Kelas (Soft Green) -->
+    <a href="{{ route('kelas.index') }}" class="bg-emerald-50/60 p-5 rounded-2xl border border-emerald-100 shadow-sm hover:shadow-md transition-all group block">
+        <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold text-emerald-600 uppercase tracking-wider">Kelas Rombel</span>
+        </div>
+        <div class="mt-3">
+            <h3 class="text-2xl font-black text-slate-800 group-hover:text-emerald-600 transition-colors">{{ $jumlahKelas ?? 0 }}</h3>
+            <p class="text-[11px] text-slate-500 mt-0.5">Kelas pembelajaran aktif</p>
+        </div>
+    </a>
+
+    <!-- Card 3: Data Siswa (Soft Amber/Yellow) -->
+    <a href="{{ route('siswa.index') }}" class="bg-amber-50/60 p-5 rounded-2xl border border-amber-100 shadow-sm hover:shadow-md transition-all group block">
+        <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold text-amber-600 uppercase tracking-wider">Siswa Aktif</span>
+        </div>
+        <div class="mt-3">
+            <h3 class="text-2xl font-black text-slate-800 group-hover:text-amber-600 transition-colors">{{ $jumlahSiswa ?? 0 }}</h3>
+            <p class="text-[11px] text-slate-500 mt-0.5">Siswa terdaftar dalam sistem</p>
+        </div>
+    </a>
+
+    <!-- Card 4: Mata Pelajaran (Soft Purple) -->
+    <a href="{{ route('mapel.index') }}" class="bg-purple-50/60 p-5 rounded-2xl border border-purple-100 shadow-sm hover:shadow-md transition-all group block">
+        <div class="flex items-center justify-between">
+            <span class="text-[11px] font-bold text-purple-600 uppercase tracking-wider">Mata Pelajaran</span>
+        </div>
+        <div class="mt-3">
+            <h3 class="text-2xl font-black text-slate-800 group-hover:text-purple-600 transition-colors">{{ $jumlahMapel ?? 0 }}</h3>
+            <p class="text-[11px] text-slate-500 mt-0.5">Mapel terstruktur</p>
+        </div>
+    </a>
+</div>
+            <!-- ================= KALENDER AKADEMIK (FULL WIDTH) ================= -->
+            <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                <div class="flex items-center justify-between mb-4">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-800">Kalender Hari Ini</h3>
+                        <p class="text-xs text-slate-400">Jadwal tanggal dan hari efektif sekolah.</p>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span id="calendar-month-year" class="text-xs font-extrabold text-slate-800"></span>
+                        <button onclick="goToCurrentMonth()" class="text-[10px] text-blue-600 font-bold bg-blue-50 px-2.5 py-1 rounded-lg hover:bg-blue-100 transition">Hari Ini</button>
+                    </div>
                 </div>
-                <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm text-center py-10">
-                    <div class="w-12 h-12 bg-gray-50 text-gray-400 rounded-full flex items-center justify-center mx-auto mb-3 text-lg">⚙️</div>
-                    <h4 class="text-xs font-bold text-gray-800">Belum Ada Jadwal Aktif</h4>
-                    <p class="text-[11px] text-gray-400 mt-1 max-w-sm mx-auto">Sistem penjadwalan otomatis siap digunakan setelah master data guru, kelas, siswa, dan mapel lengkap diisi.</p>
+                
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <div class="grid grid-cols-7 gap-1 text-center text-[10px] text-slate-400 font-bold mb-2">
+                        <span>Senin</span><span>Selasa</span><span>Rabu</span><span>Kamis</span><span>Jumat</span><span>Sabtu</span><span>Minggu</span>
+                    </div>
+                    <div id="calendar-days" class="grid grid-cols-7 gap-1 text-center text-[11px] font-semibold text-slate-700">
+                        <!-- Rendered by JS -->
+                    </div>
                 </div>
             </div>
+
         </main>
-
-        <!-- 3. SIDEBAR KANAN (Kalender Nyata & Info) -->
-        <aside class="w-80 bg-white border-l border-gray-100 p-6 flex flex-col justify-between hidden xl:flex shrink-0">
-            <div>
-                <!-- Informasi Kalender Dinamis (Nyata) -->
-                <div class="bg-[#F8F9FA] p-5 rounded-2xl mb-6">
-                    <div class="flex justify-between items-center mb-4">
-                        <span id="calendar-month-year" class="text-xs font-bold text-gray-800"></span>
-                        <span class="text-[10px] text-indigo-600 font-semibold cursor-pointer hover:underline" onclick="goToCurrentMonth()">Hari Ini</span>
-                    </div>
-                    <div class="grid grid-cols-7 gap-1 text-center text-[10px] text-gray-400 font-medium mb-2">
-                        <span>Sn</span><span>Sl</span><span>Rb</span><span>Km</span><span>Jm</span><span>Sb</span><span>Mg</span>
-                    </div>
-                    <div id="calendar-days" class="grid grid-cols-7 gap-1 text-center text-[11px] font-medium text-gray-600">
-                        <!-- Tanggal dirender otomatis lewat JavaScript -->
-                    </div>
-                </div>
-            </div>
-        </aside>
 
     </div>
 
@@ -221,7 +258,7 @@
 
             for (let i = 0; i < firstDayIndex; i++) {
                 const emptySpan = document.createElement('span');
-                emptySpan.className = 'py-1';
+                emptySpan.className = 'py-2';
                 daysContainer.appendChild(emptySpan);
             }
 
@@ -230,9 +267,9 @@
                 daySpan.innerText = day;
 
                 if (isCurrentMonth && day === currentDay) {
-                    daySpan.className = 'py-1 bg-indigo-600 text-white rounded-lg shadow-sm font-bold block';
+                    daySpan.className = 'py-2 bg-blue-600 text-white rounded-lg shadow-sm font-bold block';
                 } else {
-                    daySpan.className = 'py-1 hover:bg-gray-200 rounded-lg cursor-pointer transition block';
+                    daySpan.className = 'py-2 hover:bg-slate-200 rounded-lg cursor-pointer transition block';
                 }
 
                 daysContainer.appendChild(daySpan);

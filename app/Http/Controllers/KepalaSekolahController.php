@@ -1,11 +1,14 @@
 <?php
 
 namespace App\Http\Controllers;
-
+use Illuminate\Support\Facades\DB; // <-- Pastikan ini di-import di bagian atas controller jika belum ada
 use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Kelas;
 use App\Models\Mapel;
+use App\Models\SlotWaktu;
+
+use App\Models\JadwalPelajaran; // <-- Tambahkan baris import ini di bagian atas!// <-- Pastikan model Jadwal di-import di sini
 
 class KepalaSekolahController extends Controller
 {
@@ -62,27 +65,80 @@ class KepalaSekolahController extends Controller
         return view('profile.profil-kepsek');
     }
 
-     //  Memperbarui email atau password kepala sekolah.
-public function updateProfile(Request $request)
-{
-    // Dapatkan nama primary key user yang aktif secara dinamis
-    $userId = auth()->user()->getAuthIdentifier();
-    $primaryKey = auth()->user()->getKeyName();
+    /**
+     * Memperbarui email atau password kepala sekolah.
+     */
+    public function updateProfile(Request $request)
+    {
+        // Dapatkan nama primary key user yang aktif secara dinamis
+        $userId = auth()->user()->getAuthIdentifier();
+        $primaryKey = auth()->user()->getKeyName();
 
-    $request->validate([
-        'email' => 'required|email|unique:users,email,' . $userId . ',' . $primaryKey,
-        'password' => 'nullable|min:6|confirmed',
-    ]);
+        $request->validate([
+            'email' => 'required|email|unique:users,email,' . $userId . ',' . $primaryKey,
+            'password' => 'nullable|min:6|confirmed',
+        ]);
 
-    $user = auth()->user();
-    $user->email = $request->email;
+        $user = auth()->user();
+        $user->email = $request->email;
 
-    if ($request->filled('password')) {
-        $user->password = bcrypt($request->password);
+        if ($request->filled('password')) {
+            $user->password = bcrypt($request->password);
+        }
+
+        $user->save();
+
+        return redirect()->route('kepala-sekolah.profile')->with('success', 'Profil berhasil diperbarui!');
     }
 
-    $user->save();
+    /**
+     * Menampilkan halaman melihat jadwal pelajaran untuk kepala sekolah.
+     */
+public function melihatJadwal(Request $request)
+    {
+        // Ambil daftar tahun ajaran yang tersedia di database
+        $years = JadwalPelajaran::whereNotNull('tahun_ajaran')->distinct()->orderByDesc('tahun_ajaran')->pluck('tahun_ajaran')->all();
+        if (!$years) $years = [date('Y') . '/' . (date('Y') + 1)];
+        
+        $year = $request->input('tahun_ajaran', session('tahun_ajaran_aktif', $years[0]));
+        $semester = $request->input('semester', session('semester_aktif', 'Ganjil'));
+        
+        session(['tahun_ajaran_aktif' => $year, 'semester_aktif' => $semester]);
 
-    return redirect()->route('kepala-sekolah.profile')->with('success', 'Profil berhasil diperbarui!');
-}
+        $kelasList = Kelas::where('is_active', 1)->orderBy('nama_kelas')->get();
+        $slotWaktuList = SlotWaktu::orderBy('urutan')->get();
+        
+        $jadwalList = JadwalPelajaran::with(['mataPelajaran', 'guru', 'kelas', 'slotWaktu'])
+            ->where('tahun_ajaran', $year)
+            ->where('semester', $semester)
+            ->get();
+
+        // Susun ke dalam bentuk matriks grid (Hari -> Jam -> Kelas)
+        $matriksJadwal = [];
+        foreach ($jadwalList as $jadwal) {
+            $slot = $jadwal->slotWaktu;
+            $day = strtolower(trim((string) ($slot->hari ?? $jadwal->hari ?? '')));
+            $start = substr(trim((string) ($slot->jam_mulai ?? $jadwal->jam_mulai ?? '')), 0, 5);
+            $classId = $jadwal->kelas_id;
+            
+            $cell = [
+                'mapel' => $jadwal->mataPelajaran->nama_mapel ?? '-', 
+                'guru' => $jadwal->guru->nama ?? '-'
+            ];
+            
+            $matriksJadwal[$day][$start][$classId] = $cell;
+        }
+
+        $tahunAjaran = $year;
+        $listTahunAjaran = $years;
+
+        return view('kepala-sekolah.melihat-jadwal', compact(
+            'slotWaktuList', 
+            'kelasList', 
+            'matriksJadwal', 
+            'tahunAjaran', 
+            'semester', 
+            'listTahunAjaran'
+        ));
+    }
 }

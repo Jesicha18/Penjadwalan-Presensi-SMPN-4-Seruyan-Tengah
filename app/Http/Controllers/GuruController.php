@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Guru;
 use App\Models\User;
 use App\Models\PresensiGuru;
+use App\Models\JadwalPelajaran;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -165,6 +166,89 @@ class GuruController extends Controller
 
         return view('dashboard.guru', compact('user', 'guru', 'statusHariIni', 'totalHadirBulanIni'));
     }
+
+    
+    // ==========================================
+    // JADWAL MENGAJAR GURU
+    // ==========================================
+    public function jadwalMengajar(Request $request)
+    {
+        $user = Auth::user();
+
+        // Ambil data guru yang terhubung dengan akun login
+        $guru = Guru::where('user_id', $user->getAuthIdentifier())
+            ->first();
+
+        if (!$guru) {
+            return redirect()
+                ->route('dashboard.guru')
+                ->withErrors([
+                    'error' => 'Data guru tidak ditemukan. Hubungi Administrator.'
+                ]);
+        }
+
+        // Gunakan tahun ajaran dan semester aktif dari session
+        $tahunAjaran = session('tahun_ajaran_aktif');
+        $semester = session('semester_aktif', 'Ganjil');
+
+        // Filter tambahan jika pengguna memilih tahun ajaran/semester
+        $filterTahun = $request->input('tahun_ajaran', $tahunAjaran);
+        $filterSemester = $request->input('semester', $semester);
+
+        $query = JadwalPelajaran::with([
+            'kelas',
+            'mataPelajaran',
+            'slotWaktu'
+        ])
+        ->where('guru_id', $guru->id);
+
+        if ($filterTahun) {
+            $query->where('tahun_ajaran', $filterTahun);
+        }
+
+        if ($filterSemester) {
+            $query->where('semester', $filterSemester);
+        }
+
+        $jadwal = $query->get();
+
+        // Urutan hari sekolah
+        $urutanHari = [
+            'Senin' => 1,
+            'Selasa' => 2,
+            'Rabu' => 3,
+            'Kamis' => 4,
+            'Jumat' => 5,
+            'Sabtu' => 6,
+        ];
+
+        $jadwal = $jadwal->sort(function ($a, $b) use ($urutanHari) {
+            $hariA = $urutanHari[$a->hari] ?? 99;
+            $hariB = $urutanHari[$b->hari] ?? 99;
+
+            if ($hariA !== $hariB) {
+                return $hariA <=> $hariB;
+            }
+
+            return strcmp($a->jam_mulai, $b->jam_mulai);
+        })->values();
+
+        $daftarTahunAjaran = JadwalPelajaran::where('guru_id', $guru->id)
+            ->select('tahun_ajaran')
+            ->distinct()
+            ->orderByDesc('tahun_ajaran')
+            ->pluck('tahun_ajaran');
+
+        return view('guru.jadwal-pelajaran', compact(
+            'user',
+            'guru',
+            'jadwal',
+            'filterTahun',
+            'filterSemester',
+            'daftarTahunAjaran'
+        ));
+    }
+
 
     // ==========================================
     // MANAJEMEN PROFIL SAYA (UNTUK GURU YANG LOGIN)

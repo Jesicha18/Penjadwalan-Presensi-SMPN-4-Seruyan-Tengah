@@ -4,46 +4,75 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edit Mata Pelajaran - SMPN 4 Seruyan Tengah</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/logo-smpn4.png') }}">
+<link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/logo-smpn4.png') }}">    <
+    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Plus Jakarta Sans -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        /* Custom scrollbar halus */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
 </head>
-<body class="bg-[#F8F9FA] font-sans antialiased text-gray-800">
+<body class="bg-[#F8FAFC] antialiased text-slate-800">
 
     <div class="flex h-screen overflow-hidden">
         
-        <!-- 1. SIDEBAR KIRI -->
-        <aside class="w-64 bg-white border-r border-gray-100 flex flex-col justify-between p-6 shrink-0 shadow-sm overflow-y-auto">
+        <!-- ================= 1. SIDEBAR KIRI (DARK DEEP BLUE) ================= -->
+        <aside class="w-64 bg-[#0F5EA3] text-white flex flex-col justify-between p-5 shrink-0 shadow-xl select-none overflow-y-auto">
             <div>
-                <div class="flex items-center space-x-3 mb-10">
-                    <div class="w-9 h-9 bg-indigo-600 rounded-xl flex items-center text-white justify-center font-bold shadow-md shadow-indigo-100">
-                        S
-                    </div>
-                    <div>
-                        <h1 class="text-xs font-bold text-gray-900 tracking-wider">SMPN 4 SERUYAN</h1>
-                        <p class="text-[10px] text-gray-400 truncate max-w-[130px]">{{ Auth::user()->email ?? 'kurikulum@smpn4.sch.id' }}</p>
-                    </div>
-                </div>
+<!-- User Profile Header / Logo Sekolah -->
+<div class="flex items-center space-x-3 mb-8 px-2">
+    <div class="w-10 h-10 bg-white rounded-xl flex items-center justify-center overflow-hidden shadow-md p-1 shrink-0">
+        <img src="{{ asset('images/logo-smpn4.png') }}" alt="Logo SMPN 4 Seruyan Tengah" class="w-full h-full object-contain">
+    </div>
+    <div>
+        <h1 class="text-xs font-bold tracking-wider text-white">SMPN 4 SERUYAN</h1>
+        <p class="text-[10px] text-blue-200 truncate max-w-[130px] font-medium">{{ Auth::user()->email ?? 'kurikulum@smpn4.sch.id' }}</p>
+    </div>
+</div>
 
                 <!-- Navigasi Menu -->
                 <div class="space-y-6">
                     <div>
-                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-3">Menu Utama</p>
+                        <p class="text-[10px] font-bold text-blue-200 uppercase tracking-widest px-3 mb-2.5 opacity-80">Menu Utama</p>
                         <nav class="space-y-1">
-                            <a href="{{ route('dashboard.waka') }}" class="flex items-center space-x-3 px-3.5 py-2.5 text-gray-500 hover:bg-gray-50 hover:text-gray-900 rounded-xl text-xs font-medium transition-all duration-300 ease-in-out">
-                                <svg class="w-4 h-4 transition-transform duration-300 ease-in-out group-hover:scale-110" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+                            <a href="{{ route('dashboard.waka') }}" class="flex items-center space-x-3 px-3.5 py-2.5 text-blue-100 hover:bg-white/10 hover:text-white rounded-xl text-xs font-medium transition-all">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
                                 <span>Dashboard</span>
                             </a>
                             <!-- Profil Saya -->
-                            <a href="{{ route('waka.profile') }}" class="flex items-center space-x-3 px-3.5 py-2.5 text-gray-500 hover:bg-gray-50 hover:text-gray-900 rounded-xl text-xs font-medium transition-all duration-300 ease-in-out">
+                            <a href="{{ route('waka.profile') }}" class="flex items-center space-x-3 px-3.5 py-2.5 text-blue-100 hover:bg-white/10 hover:text-white rounded-xl text-xs font-medium transition-all">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                                 <span>Profil Saya</span>
                             </a>
-                            <!-- Menu Khusus "Buat Jadwal" (Pusat Kartu Modul & Generator) -->
-                            <a href="{{ route('jadwal.index') }}" class="flex items-center space-x-3 px-3.5 py-2.5 text-gray-500 hover:bg-gray-50 hover:text-gray-900 rounded-xl text-xs font-medium transition-all duration-300 ease-in-out">
+                            <!-- Buat Jadwal -->
+                            <a href="{{ route('jadwal.index') }}" class="flex items-center space-x-3 px-3.5 py-2.5 text-blue-100 hover:bg-white/10 hover:text-white rounded-xl text-xs font-medium transition-all">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                 <span>Buat Jadwal</span>
                             </a>
-                            <!-- Menu Utama Jadwal Pelajaran (Arsip/Hasil Jadi) -->
-                            <a href="{{ route('jadwal-pelajaran.show') }}" class="flex items-center space-x-3 px-3.5 py-2.5 text-gray-500 hover:bg-gray-50 hover:text-gray-900 rounded-xl text-xs font-medium transition-all duration-300 ease-in-out">
+                            <!-- Jadwal Pelajaran -->
+                            <a href="{{ route('jadwal-pelajaran.show') }}" class="flex items-center space-x-3 px-3.5 py-2.5 text-blue-100 hover:bg-white/10 hover:text-white rounded-xl text-xs font-medium transition-all">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                 <span>Jadwal Pelajaran</span>
                             </a>
@@ -51,37 +80,37 @@
                     </div>
 
                     <div>
-                        <p class="text-[10px] font-semibold text-gray-400 uppercase tracking-wider mb-3">Master Data</p>
+                        <p class="text-[10px] font-bold text-blue-200 uppercase tracking-widest px-3 mb-2.5 opacity-80">Master Data</p>
                         <nav class="space-y-1">
-                            <a href="{{ route('guru.index') }}" class="flex items-center space-x-3 px-3.5 py-2.5 text-gray-500 hover:bg-gray-50 hover:text-gray-900 rounded-xl text-xs font-medium transition">
+                            <a href="{{ route('guru.index') }}" class="flex items-center space-x-3 px-3.5 py-2.5 text-blue-100 hover:bg-white/10 hover:text-white rounded-xl text-xs font-medium transition-all">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
                                 </svg>
                                 <span>Data Guru</span>
                             </a>
 
-                            <a href="{{ route('kelas.index') }}" class="flex items-center space-x-3 px-3.5 py-2.5 text-gray-500 hover:bg-gray-50 hover:text-gray-900 rounded-xl text-xs font-medium transition">
+                            <a href="{{ route('kelas.index') }}" class="flex items-center space-x-3 px-3.5 py-2.5 text-blue-100 hover:bg-white/10 hover:text-white rounded-xl text-xs font-medium transition-all">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011 1h2a1 1 0 011 1v5m-4 0h4"/>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
                                 </svg>
                                 <span>Data Kelas</span>
                             </a>
-                            <!-- Menu Naik Kelas -->
-                            <a href="{{ route('siswa.naik-kelas') }}" class="flex items-center space-x-3 px-3 py-2.5 text-gray-500 hover:bg-gray-50 hover:text-gray-900 rounded-xl text-xs font-medium transition">
+                            <a href="{{ route('siswa.naik-kelas') }}" class="flex items-center space-x-3 px-3.5 py-2.5 text-blue-100 hover:bg-white/10 hover:text-white rounded-xl text-xs font-medium transition-all">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"/></svg>
                                 <span>Naik Kelas</span>
                             </a>
-                            <a href="{{ route('siswa.index') }}" class="flex items-center space-x-3 px-3.5 py-2.5 text-gray-500 hover:bg-gray-50 hover:text-gray-900 rounded-xl text-xs font-medium transition">
+                            <a href="{{ route('siswa.index') }}" class="flex items-center space-x-3 px-3.5 py-2.5 text-blue-100 hover:bg-white/10 hover:text-white rounded-xl text-xs font-medium transition-all">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
                                 </svg>
                                 <span>Data Siswa</span>
                             </a>
-                            <a href="{{ route('alumni.index') }}" class="flex items-center space-x-3 px-3.5 py-2.5 text-gray-500 hover:bg-indigo-50/50 hover:text-indigo-600 rounded-xl text-xs font-medium transition-all duration-200 group">
-                                <svg class="w-4 h-4 text-gray-400 group-hover:text-indigo-600 transition-colors duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                            <a href="{{ route('alumni.index') }}" class="flex items-center space-x-3 px-3.5 py-2.5 text-blue-100 hover:bg-white/10 hover:text-white rounded-xl text-xs font-medium transition-all">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2v0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
                                 <span>Data Alumni</span>
                             </a>
-                            <a href="{{ route('mapel.index') }}" class="flex items-center space-x-3 px-3.5 py-2.5 bg-indigo-50 text-indigo-600 rounded-xl text-xs font-semibold transition">
+                            <!-- Mata Pelajaran (Aktif) -->
+                            <a href="{{ route('mapel.index') }}" class="flex items-center space-x-3 px-3.5 py-2.5 bg-[#2582E5] text-white rounded-xl text-xs font-semibold shadow-md transition-all">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18 18.247 18 16.5 18c-1.746 0-3.332 1.253-4.5 1.253"/>
                                 </svg>
@@ -93,10 +122,10 @@
             </div>
 
             <!-- Tombol Logout -->
-            <div>
+            <div class="pt-4 border-t border-white/10">
                 <form action="{{ route('logout') }}" method="POST">
                     @csrf
-                    <button type="submit" class="w-full flex items-center space-x-3 px-3 py-2 text-rose-500 hover:bg-rose-50 rounded-xl text-xs font-semibold">
+                    <button type="submit" class="w-full flex items-center space-x-3 px-3.5 py-2.5 text-rose-200 hover:bg-rose-500/20 hover:text-rose-100 rounded-xl text-xs font-semibold transition-all">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
                         <span>Keluar Akun</span>
                     </button>
@@ -104,21 +133,21 @@
             </div>
         </aside>
 
-        <!-- 2. KONTEN UTAMA -->
-        <main class="flex-1 overflow-y-auto p-10">
-            <div class="max-w-full">
+        <!-- ================= 2. KONTEN UTAMA (FULL WIDTH) ================= -->
+        <main class="flex-1 overflow-y-auto p-6 md:p-8 space-y-6">
+            <div class="w-full space-y-6">
 
                 <!-- Header Section -->
-                <div class="mb-6">
-                    <h1 class="text-xl font-bold tracking-tight text-gray-900">Edit Mata Pelajaran</h1>
-                    <p class="text-xs text-gray-500 mt-0.5">Perbarui pilihan mata pelajaran, kode mapel, dan preferensi prioritas.</p>
+                <div class="pb-4 border-b border-slate-200">
+                    <h1 class="text-2xl font-extrabold tracking-tight text-slate-900">Edit Mata Pelajaran</h1>
+                    <p class="text-xs text-slate-400 mt-0.5">Perbarui pilihan mata pelajaran, kode mapel, dan preferensi prioritas.</p>
                 </div>
 
                 <!-- Validation Errors -->
                 @if($errors->any())
-                    <div class="mb-6 p-4 bg-rose-50 text-rose-800 border border-rose-200 rounded-xl text-xs space-y-1 shadow-sm">
+                    <div class="p-4 bg-rose-50 text-rose-800 border border-rose-200 rounded-xl text-xs font-bold space-y-1 shadow-sm">
                         @foreach($errors->all() as $error)
-                            <p class="font-medium flex items-center gap-2">
+                            <p class="flex items-center gap-2">
                                 <svg class="w-4 h-4 text-rose-600 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z"></path></svg>
                                 <span>{{ $error }}</span>
                             </p>
@@ -126,17 +155,17 @@
                     </div>
                 @endif
 
-                <!-- Form Card Full Lebar -->
-                <div class="bg-white rounded-2xl border border-gray-200 shadow-sm p-8">
+                <!-- Form Card -->
+                <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-6 md:p-8">
                     <form action="{{ route('mapel.update', $mapel) }}" method="POST" class="space-y-6">
                         @csrf
                         @method('PUT')
 
                         <div>
-                            <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">Pilih Mata Pelajaran</label>
+                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Pilih Mata Pelajaran</label>
                             <select name="nama_mapel" id="nama_mapel" required
                                 onchange="updateKodeMapel(this)"
-                                class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-xs text-gray-900 focus:outline-none focus:bg-white focus:ring-2 focus:ring-indigo-600 focus:border-transparent">
+                                class="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all cursor-pointer">
                                 <option value="" disabled>-- Pilih Mata Pelajaran --</option>
                                 <option value="Pendidikan Agama Islam dan Budi Pekerti" data-kode="PAI" {{ old('nama_mapel', $mapel->nama_mapel) == 'Pendidikan Agama Islam dan Budi Pekerti' ? 'selected' : '' }}>Pendidikan Agama Islam dan Budi Pekerti</option>
                                 <option value="Pendidikan Pancasila dan Kewarganegaraan" data-kode="PPKN" {{ old('nama_mapel', $mapel->nama_mapel) == 'Pendidikan Pancasila dan Kewarganegaraan' ? 'selected' : '' }}>Pendidikan Pancasila dan Kewarganegaraan</option>
@@ -153,31 +182,31 @@
                         </div>
 
                         <div>
-                            <label class="block text-xs font-semibold text-gray-700 uppercase tracking-wider mb-2">Kode Mapel</label>
+                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Kode Mapel</label>
                             <input type="text" name="kode_mapel" id="kode_mapel" value="{{ old('kode_mapel', $mapel->kode_mapel) }}" required readonly
                                 placeholder="Otomatis terisi..."
-                                class="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-xs text-gray-700 font-mono focus:outline-none cursor-not-allowed">
+                                class="w-full px-4 py-3.5 bg-slate-100 border border-slate-200 rounded-xl text-xs text-slate-600 font-mono focus:outline-none cursor-not-allowed">
                         </div>
 
                         <!-- Checkbox Prioritas Jam Pagi -->
-                        <div class="flex items-center gap-3 p-4 bg-gray-50 border border-gray-200 rounded-xl">
+                        <div class="flex items-center gap-3 p-4 bg-slate-50 border border-slate-200 rounded-xl">
                             <input type="checkbox" name="prioritas_jam_pagi" id="prioritas_jam_pagi" value="1" 
                                 {{ old('prioritas_jam_pagi', $mapel->prioritas_jam_pagi) ? 'checked' : '' }}
-                                class="w-4 h-4 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500">
+                                class="w-4 h-4 text-[#2582E5] border-slate-300 rounded focus:ring-blue-500/20 cursor-pointer">
                             <div>
-                                <label for="prioritas_jam_pagi" class="text-xs font-semibold text-gray-800 cursor-pointer">Prioritas Jam Pagi</label>
-                                <p class="text-[11px] text-gray-500">Centang jika mata pelajaran ini diutamakan untuk dijadwalkan pada sesi jam pelajaran pagi.</p>
+                                <label for="prioritas_jam_pagi" class="text-xs font-bold text-slate-800 cursor-pointer">Prioritas Jam Pagi</label>
+                                <p class="text-[11px] text-slate-400">Centang jika mata pelajaran ini diutamakan untuk dijadwalkan pada sesi jam pelajaran pagi.</p>
                             </div>
                         </div>
 
                         <!-- Tombol Aksi di Kanan Bawah -->
-                        <div class="flex items-center justify-end gap-3 pt-4">
+                        <div class="flex items-center justify-end gap-3 pt-6 border-t border-slate-100">
                             <a href="{{ route('mapel.index') }}"
-                                class="bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold py-2.5 px-6 rounded-xl border border-gray-200 text-center">
+                                class="bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold py-2.5 px-6 rounded-xl border border-slate-200 transition">
                                 Kembali
                             </a>
                             <button type="submit"
-                                class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold py-2.5 px-6 rounded-xl shadow-sm text-center">
+                                class="bg-[#2582E5] hover:bg-blue-600 text-white text-xs font-bold py-2.5 px-6 rounded-xl shadow-md transition">
                                 Simpan Perubahan
                             </button>
                         </div>

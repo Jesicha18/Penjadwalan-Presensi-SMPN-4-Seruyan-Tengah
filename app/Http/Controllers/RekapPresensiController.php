@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Guru;
 use App\Models\PresensiGuru;
+use App\Models\PresensiSiswa;
+use App\Models\Kelas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -15,15 +17,24 @@ class RekapPresensiController extends Controller
         $user = Auth::user();
         $guru = Guru::where('user_id', $user->getAuthIdentifier())->first();
 
-        // Filter Bulan, Tahun, dan Tab Aktif (guru / siswa)
+        // Filter Bulan, Tahun, Tab Aktif (guru / siswa)
         $bulanPilihan = $request->input('bulan', date('m'));
         $tahunPilihan = $request->input('tahun', date('Y'));
         $tabAktif     = $request->input('tab', 'guru');
+        $kelasPilihan = $request->input('kelas_id');
+
+        // Daftar kelas untuk dropdown presensi siswa
+        $daftarKelas = Kelas::orderBy('nama_kelas')->get();
 
         // 1. REKAP GURU
         $listPresensiGuru = collect();
-        // Tambahkan 'tidak_hadir' pada array statistik
-        $statistikGuru = ['hadir' => 0, 'izin' => 0, 'sakit' => 0, 'tidak_hadir' => 0];
+
+        $statistikGuru = [
+            'hadir' => 0,
+            'izin' => 0,
+            'sakit' => 0,
+            'tidak_hadir' => 0
+        ];
 
         if ($guru) {
             $listPresensiGuru = PresensiGuru::where('guru_id', $guru->id)
@@ -32,25 +43,42 @@ class RekapPresensiController extends Controller
                 ->orderBy('tanggal', 'ASC')
                 ->get();
 
-            $statistikGuru['hadir']       = $listPresensiGuru->where('status_kehadiran', 'Hadir')->count();
-            $statistikGuru['izin']        = $listPresensiGuru->where('status_kehadiran', 'Izin')->count();
-            $statistikGuru['sakit']       = $listPresensiGuru->where('status_kehadiran', 'Sakit')->count();
-            // Menghitung status Tidak Hadir secara terpisah
-            $statistikGuru['tidak_hadir'] = $listPresensiGuru->where('status_kehadiran', 'Tidak Hadir')->count();
+            $statistikGuru['hadir'] = $listPresensiGuru
+                ->where('status_kehadiran', 'Hadir')->count();
+
+            $statistikGuru['izin'] = $listPresensiGuru
+                ->where('status_kehadiran', 'Izin')->count();
+
+            $statistikGuru['sakit'] = $listPresensiGuru
+                ->where('status_kehadiran', 'Sakit')->count();
+
+            $statistikGuru['tidak_hadir'] = $listPresensiGuru
+                ->where('status_kehadiran', 'Tidak Hadir')->count();
         }
 
         // 2. REKAP SISWA
-        $listPresensiSiswa = collect();
+            $queryPresensiSiswa = PresensiSiswa::with(['siswa', 'siswa.kelas'])            ->whereMonth('tanggal', $bulanPilihan)
+            ->whereYear('tanggal', $tahunPilihan);
 
-        return view('presensi.rekap-presensi', compact(
-            'user', 
-            'guru', 
-            'listPresensiGuru', 
-            'statistikGuru', 
-            'listPresensiSiswa',
-            'bulanPilihan', 
-            'tahunPilihan',
-            'tabAktif'
-        ));
+        // Filter kelas hanya untuk rekap siswa
+        if (!empty($kelasPilihan)) {
+            $queryPresensiSiswa->whereHas('siswa', function ($query) use ($kelasPilihan) {
+                $query->where('kelas_id', $kelasPilihan);
+            });
+        }
+
+        $listPresensiSiswa = $queryPresensiSiswa
+            ->orderBy('tanggal', 'ASC')
+            ->get();
+
+return view('presensi.rekap-presensi', compact(
+    'tabAktif',
+    'bulanPilihan',
+    'tahunPilihan',
+    'statistikGuru',
+    'listPresensiGuru',
+    'listPresensiSiswa',
+    'daftarKelas'
+));
     }
 }

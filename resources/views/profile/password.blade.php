@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Ganti Password - SIPAS</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('images/logo-smpn4.png') }}">
+<link rel="apple-touch-icon" sizes="180x180" href="{{ asset('images/logo-smpn4.png') }}">    <
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-white font-sans antialiased text-neutral-900">
