@@ -77,8 +77,27 @@ class JadwalPelajaranController extends Controller
         session(['tahun_ajaran_aktif' => $year, 'semester_aktif' => $semester]);
 
         $kelasList = Kelas::where('is_active', 1)->orderBy('nama_kelas')->get();
-        $slotWaktuList = SlotWaktu::orderBy('urutan')->get();
-        $jadwalList = JadwalPelajaran::with(['mataPelajaran', 'guru', 'kelas', 'slotWaktu'])
+$urutanHari = [
+    'senin'  => 1,
+    'selasa' => 2,
+    'rabu'   => 3,
+    'kamis'  => 4,
+    'jumat'  => 5,
+    'sabtu'  => 6,
+];
+
+$slotWaktuList = SlotWaktu::get()
+    ->sortBy(function ($slot) use ($urutanHari) {
+        $hari = strtolower(trim((string) $slot->hari));
+
+        return sprintf(
+            '%02d-%08d-%s',
+            $urutanHari[$hari] ?? 99,
+            (int) $slot->urutan,
+            (string) $slot->jam_mulai
+        );
+    })
+    ->values();        $jadwalList = JadwalPelajaran::with(['mataPelajaran', 'guru', 'kelas', 'slotWaktu'])
             ->where('tahun_ajaran', $year)->where('semester', $semester)->get();
 
         $matriksJadwal = [];
@@ -87,7 +106,12 @@ class JadwalPelajaranController extends Controller
             $day = strtolower(trim((string) ($slot->hari ?? $jadwal->hari ?? '')));
             $start = substr(trim((string) ($slot->jam_mulai ?? $jadwal->jam_mulai ?? '')), 0, 5);
             $classId = $jadwal->kelas_id;
-            $cell = ['mapel' => $jadwal->mataPelajaran->nama_mapel ?? '-', 'guru' => $jadwal->guru->nama ?? '-'];
+            $cell = [
+                'id_jadwal' => $jadwal->id,
+                'slot_waktu_id' => $jadwal->slot_waktu_id,
+                'mapel' => $jadwal->mataPelajaran->nama_mapel ?? '-',
+                'guru' => $jadwal->guru->nama ?? '-',
+            ];         
             $matriksJadwal[$day][$start][$classId] = $cell;
             if ($jadwal->slot_waktu_id) $matriksJadwal['by_slot'][$jadwal->slot_waktu_id][$classId] = $cell;
         }
@@ -196,25 +220,36 @@ class JadwalPelajaranController extends Controller
             $this->teacherDemand[$teacherId] = ($this->teacherDemand[$teacherId] ?? 0) + $demand;
         }
 
-        // Constraint khusus PJOK: setiap kelas harus memiliki satu mapping PJOK
-        // dengan jumlah 3 JP agar solver bisa mempertahankannya sebagai satu blok.
-        $pjokMappingsByClass = [];
-        $pjokDemandByClass = [];
-        foreach ($this->mappingInfo as $key => $info) {
-            if (!$this->isPjokMapping((string) $key)) continue;
-            $classId = (int) $info['class_id'];
-            $pjokMappingsByClass[$classId][] = (string) $key;
-            $pjokDemandByClass[$classId] = ($pjokDemandByClass[$classId] ?? 0) + (int) $this->mappingDemand[$key];
-        }
+        // PJOK dan Agama wajib masing-masing dijadwalkan sebagai satu blok 3 JP per kelas.
+        $requiredTypes = ['pjok' => 'PJOK', 'agama' => 'Agama'];
         foreach ($classes as $class) {
             $classId = (int) $class->id_kelas;
-            $pjokKeys = $pjokMappingsByClass[$classId] ?? [];
-            $pjokTotal = $pjokDemandByClass[$classId] ?? 0;
-            if ($pjokTotal !== 3) {
-                return $this->generateError($year, $semester, "Mapping PJOK kelas {$class->nama_kelas} harus berjumlah tepat 3 JP per minggu. Saat ini: {$pjokTotal} JP.");
-            }
-            if (count($pjokKeys) !== 1 || (int) ($this->mappingDemand[$pjokKeys[0]] ?? 0) !== 3) {
-                return $this->generateError($year, $semester, "Gabungkan mapping PJOK kelas {$class->nama_kelas} menjadi satu mapping dengan jumlah_jp = 3 agar dapat dijadwalkan dalam satu blok.");
+
+            foreach ($requiredTypes as $type => $label) {
+                $requiredKeys = [];
+                $totalDemand = 0;
+
+                foreach ($this->classMappings[$classId] ?? [] as $key) {
+                    if ($this->requiredBlockType((string) $key) !== $type) continue;
+                    $requiredKeys[] = (string) $key;
+                    $totalDemand += (int) ($this->mappingDemand[$key] ?? 0);
+                }
+
+                if ($totalDemand !== 3) {
+                    return $this->generateError(
+                        $year,
+                        $semester,
+                        "Mapping {$label} kelas {$class->nama_kelas} harus berjumlah tepat 3 JP per minggu. Saat ini: {$totalDemand} JP."
+                    );
+                }
+
+                if (count($requiredKeys) !== 1 || (int) ($this->mappingDemand[$requiredKeys[0]] ?? 0) !== 3) {
+                    return $this->generateError(
+                        $year,
+                        $semester,
+                        "Gabungkan mapping {$label} kelas {$class->nama_kelas} menjadi satu mapping dengan jumlah_jp = 3 agar dapat dijadwalkan dalam satu blok."
+                    );
+                }
             }
         }
 
@@ -432,9 +467,9 @@ class JadwalPelajaranController extends Controller
                 }
             }
 
-            // Tempatkan PJOK sebagai blok 3 JP berdekatan terlebih dahulu.
-            // Setelah blok PJOK aman, backtracking mengisi mapel lainnya.
-            if ($this->solvePjokBlocksFirst()) {
+            // Tempatkan PJOK dan Agama sebagai blok 3 JP berdekatan terlebih dahulu.
+            // Setelah blok wajib aman, backtracking mengisi mapel lainnya.
+            if ($this->solveRequiredBlocksFirst()) {
                 return true;
             }
 
@@ -449,16 +484,16 @@ class JadwalPelajaranController extends Controller
     }
 
     /**
-     * Jadwalkan blok PJOK 3 JP untuk semua kelas sebelum mapel lain.
+     * Jadwalkan blok PJOK dan Agama (masing-masing 3 JP) untuk semua kelas sebelum mapel lain.
      * Blok tetap menjadi keputusan backtracking: jika kombinasi blok membuat
      * jadwal mapel lain buntu, blok dibatalkan dan dicoba pada waktu lain.
      */
-    private function solvePjokBlocksFirst(): bool
+    private function solveRequiredBlocksFirst(): bool
     {
         $items = [];
         foreach ($this->classMappings as $classId => $keys) {
             foreach ($keys as $key) {
-                if (!$this->isPjokMapping((string) $key)) continue;
+                if (!$this->isRequiredBlockMapping((string) $key)) continue;
                 if ((int) ($this->mappingDemand[$key] ?? 0) !== 3) return false;
                 $items[] = ['class_id' => (int) $classId, 'key' => (string) $key];
             }
@@ -472,10 +507,10 @@ class JadwalPelajaranController extends Controller
             return ($this->teacherDemand[$teacherB] ?? 0) <=> ($this->teacherDemand[$teacherA] ?? 0);
         });
 
-        return $this->placePjokBlocksRecursive($items, 0);
+        return $this->placeRequiredBlocksRecursive($items, 0);
     }
 
-    private function placePjokBlocksRecursive(array $items, int $index): bool
+    private function placeRequiredBlocksRecursive(array $items, int $index): bool
     {
         if ($this->nodes >= $this->maxNodes || microtime(true) >= $this->deadline) {
             $this->searchLimitReached = true;
@@ -491,6 +526,9 @@ class JadwalPelajaranController extends Controller
             $daySlotIds = $this->daySlots[$day] ?? [];
             for ($start = 0; $start + 3 <= count($daySlotIds); $start++) {
                 $window = array_slice($daySlotIds, $start, 3);
+                if (!$this->slotsContinuous($window)) {
+                    continue;
+                }
                 // Slot istirahat tidak ada di daySlots. Karena itu JP 2, JP 3,
                 // dan JP 5 tetap dianggap berdekatan walau jamnya dipisahkan
                 // istirahat 15 menit. Jangan gunakan slotsContinuous() di sini.
@@ -522,7 +560,7 @@ class JadwalPelajaranController extends Controller
             $snapshot = $this->applyCandidate($classId, $candidate);
             $this->nodes++;
 
-            if ($this->placePjokBlocksRecursive($items, $index + 1)) return true;
+            if ($this->placeRequiredBlocksRecursive($items, $index + 1)) return true;
 
             $this->undoCandidate($classId, $candidate, $snapshot);
             if ($this->searchLimitReached) return false;
@@ -550,30 +588,35 @@ class JadwalPelajaranController extends Controller
         $bestDomainCount = PHP_INT_MAX;
         $bestTieScore = PHP_INT_MIN;
 
+        /*
+         * Optimasi pencarian:
+         * Sebelumnya solver menghitung domain untuk SEMUA slot kosong pada
+         * SEMUA kelas setiap node. Biaya ini sangat besar dan membuat proses
+         * mencapai deadline sebelum jumlah node tinggi.
+         *
+         * Sekarang, untuk setiap kelas yang masih membutuhkan JP, cari slot
+         * kosong pertama yang memiliki domain legal. Pilih kelas-slot dengan
+         * domain terkecil di antara kandidat tersebut. Ini tetap menggunakan
+         * heuristik fail-first/MRV, tetapi jauh lebih hemat pemeriksaan.
+         * Slot tanpa kandidat dilewati karena slot tersebut dapat tetap kosong.
+         */
         foreach ($this->classSlotIds as $classId => $slotIds) {
-            // Kelas yang sudah memenuhi total JP tidak perlu mengisi slot sisanya.
-            // Setiap kelas boleh menyisakan slot yang berbeda jika kapasitas slot
-            // mingguan lebih besar daripada kebutuhan JP kelas.
             if (($this->state['classFilled'][$classId] ?? 0) >= ($this->classDemand[$classId] ?? 0)) {
                 continue;
             }
 
-            // MRV: pilih sel dengan pilihan mapping paling sedikit. Jika seri,
-            // dahulukan slot yang domainnya memuat mapping berpermintaan tinggi
-            // atau mapel prioritas pagi, agar pilihan fleksibel tidak menghabiskan
-            // slot yang dibutuhkan mapping lebih terbatas.
             foreach ($slotIds as $slotId) {
-                if (isset($this->state['classAssignments'][$classId][$slotId])) continue;
+                if (isset($this->state['classAssignments'][$classId][$slotId])) {
+                    continue;
+                }
 
                 $domain = $this->legalMappingsForSlot((int) $classId, (int) $slotId);
                 $count = count($domain);
-                // Slot yang saat ini tidak memiliki mapping legal boleh dibiarkan
-                // kosong. Ini penting saat slot JP tersedia lebih banyak daripada
-                // kebutuhan kelas, atau semua guru yang cocok sedang bentrok.
-                // Karena solver hanya menambah assignment, domain kosong pada slot
-                // ini tidak akan menjadi lebih luas di cabang saat ini. Lewati slot
-                // ini dan cari sel lain yang masih dapat diisi.
-                if ($count === 0) continue;
+
+                // Slot ini belum bisa diisi pada state saat ini; coba slot berikutnya.
+                if ($count === 0) {
+                    continue;
+                }
 
                 $tieScore = 0;
                 $day = $this->slots[$slotId]['hari'] ?? '';
@@ -594,10 +637,14 @@ class JadwalPelajaranController extends Controller
                     $bestDomainCount = $count;
                     $bestTieScore = $tieScore;
                 }
+
+                // Hanya slot kosong pertama yang memiliki pilihan legal dari
+                // kelas ini yang dipakai untuk perbandingan MRV antar-kelas.
+                break;
             }
         }
 
-        // Semua sel yang dibutuhkan telah terisi.
+        // Tidak ada sel yang masih dapat diisi: valid jika seluruh demand terpenuhi.
         if ($bestClassId === null || $bestSlotId === null) {
             return $this->validateFinalSchedule();
         }
@@ -607,8 +654,6 @@ class JadwalPelajaranController extends Controller
         foreach ($bestDomain as $key) {
             $candidates[] = $this->buildCandidate($key, $day, [$bestSlotId]);
         }
-        // Tie-break acak: skor utama tetap dihormati, tetapi kandidat setara
-        // tidak selalu dicoba dalam urutan yang sama pada setiap restart.
         shuffle($candidates);
         usort($candidates, fn ($a, $b) => $b['score'] <=> $a['score']);
 
@@ -760,15 +805,25 @@ class JadwalPelajaranController extends Controller
     {
         $info = $this->mappingInfo[$key];
         $length = count($ids);
-        $dayLoad = $this->state['classDays'][$info['class_id']][$day] ?? 0;
-        $subjectAlready = count($this->getSubjectIndicesOnDay($info['class_id'], (int) $info['mapel_id'], $day)) > 0;
+        $classId = (int) $info['class_id'];
+        $dayLoad = $this->state['classDays'][$classId][$day] ?? 0;
+        $subjectAlready = count($this->getSubjectIndicesOnDay($classId, (int) $info['mapel_id'], $day)) > 0;
+        $distinctSubjects = $this->countDistinctSubjectsOnDay($classId, $day);
         $firstIndex = array_search($ids[0], $this->daySlots[$day], true);
         $score = match ($length) { 3 => 26000, 2 => 18000, default => 5000 };
         $remaining = $this->mappingDemand[$key] - $this->state['mappingScheduled'][$key];
         if ($length === min(3, $remaining)) $score += 15000;
         if ($dayLoad === 0) $score += 12000;
         $score -= $dayLoad * 1000;
-        if ($subjectAlready) $score += 8000; // preferensi pengelompokan mapel, bukan constraint wajib
+        if ($subjectAlready) {
+            $score += 14000; // utamakan melanjutkan mapel yang sudah ada hari itu
+        } else {
+            // Soft preference: usahakan 3 mapel berbeda per hari.
+            // Mapel ke-4 tetap diperbolehkan bila diperlukan agar semua JP terpenuhi.
+            $score -= $distinctSubjects * 4500;
+            if ($distinctSubjects === 2) $score += 3500; // mapel ke-3 sangat diutamakan
+            if ($distinctSubjects >= 3) $score -= 2500; // mapel ke-4 pilihan terakhir
+        }
         // Prioritas pagi adalah soft constraint: membantu pemilihan,
         // tetapi tidak mengalahkan constraint wajib seperti konflik guru.
         if ($info['priority_morning']) {
@@ -801,6 +856,13 @@ class JadwalPelajaranController extends Controller
         $day = $slot['hari'];
         if (($this->state['mappingDays'][$key][$day] ?? 0) >= 3) return false;
 
+        // Batas keras hanya 4 mapel berbeda per kelas per hari.
+        // Algoritma memberi skor lebih tinggi untuk 3 mapel, tetapi mapel ke-4
+        // tetap boleh digunakan jika diperlukan untuk memenuhi seluruh kebutuhan JP.
+        $subjectAlreadyToday = count($this->getSubjectIndicesOnDay($classId, (int) $info['mapel_id'], $day)) > 0;
+        $distinctSubjectsToday = $this->countDistinctSubjectsOnDay($classId, $day);
+        if (!$subjectAlreadyToday && $distinctSubjectsToday >= 4) return false;
+
         // Maksimal 3 JP untuk mapel yang sama per hari pada kelas ini.
         $sameSubjectToday = 0;
         foreach ($this->daySlots[$day] ?? [] as $daySlotId) {
@@ -818,10 +880,10 @@ class JadwalPelajaranController extends Controller
         // dengan mapel lain di antaranya tidak boleh.
         if (!$this->subjectCanStayGrouped($classId, (string) $key, $slotId)) return false;
 
-        // PJOK boleh terpisah oleh istirahat, tetapi semua 3 JP harus
+        // PJOK dan Agama boleh terpisah oleh istirahat, tetapi semua 3 JP harus
         // tetap berada pada hari yang sama.
-        if ($this->isPjokMapping((string) $key)
-            && !$this->pjokCanStillFitSameDay($classId, (string) $key, $slotId)) return false;
+        if ($this->isRequiredBlockMapping((string) $key)
+            && !$this->requiredBlockCanStillFitSameDay($classId, (string) $key, $slotId)) return false;
 
         return true;
     }
@@ -888,8 +950,8 @@ class JadwalPelajaranController extends Controller
             foreach ($this->classMappings[$classId] ?? [] as $key) {
                 $left = $this->mappingDemand[$key] - $this->state['mappingScheduled'][$key];
                 if ($left < 0 || $left > $freeSlots) return false;
-                if ($left > 0 && $this->isPjokMapping((string) $key)
-                    && !$this->pjokCanStillFitSameDay((int) $classId, (string) $key)) return false;
+                if ($left > 0 && $this->isRequiredBlockMapping((string) $key)
+                    && !$this->requiredBlockCanStillFitSameDay((int) $classId, (string) $key)) return false;
                 // Hindari membangun ulang seluruh kandidat untuk semua mapping pada
                 // setiap node; pemeriksaan mahal ini membuat solver sangat lambat.
                 // Jika mapping benar-benar tidak punya kandidat, MRV akan mendeteksinya.
@@ -903,11 +965,11 @@ class JadwalPelajaranController extends Controller
             if ($free < $left) return false;
         }
 
-        // Forward-check bertahap: pastikan setiap mapping yang belum selesai masih
+        // Forward-check berkala: setiap 12 node, pastikan mapping yang belum selesai masih
         // memiliki cukup slot yang secara nyata dapat dipakai. Ini mencegah solver
         // masuk jauh ke cabang yang sudah mustahil, tanpa membangun semua domain
         // pada setiap node (yang justru membuat pencarian sangat lambat).
-        if (($this->nodes % 4) === 0) {
+        if (($this->nodes % 12) === 0) {
             foreach ($this->mappingDemand as $key => $demand) {
                 $left = $demand - ($this->state['mappingScheduled'][$key] ?? 0);
                 if ($left <= 0) continue;
@@ -951,7 +1013,13 @@ class JadwalPelajaranController extends Controller
         }
         foreach ($this->teacherDemand as $teacherId => $demand) if (($this->state['teacherScheduled'][$teacherId] ?? 0) !== $demand) return false;
         if (!$this->validateMaxSubjectBlocksAllClasses()) return false;
-        if (!$this->validatePjokBlocksAllClasses()) return false;
+        // Validasi akhir: maksimal 4 mapel berbeda per kelas per hari.
+        foreach (array_keys($this->classDemand) as $classId) {
+            foreach ($this->days as $day) {
+                if ($this->countDistinctSubjectsOnDay((int) $classId, (string) $day) > 4) return false;
+            }
+        }
+        if (!$this->validateRequiredBlocksAllClasses()) return false;
         // Validasi akhir: guru tidak boleh mengajar pada lebih dari satu kelas di slot yang sama.
         $teacherSlotSeen = [];
         foreach ($this->state['classAssignments'] as $classId => $assignments) {
@@ -973,16 +1041,40 @@ class JadwalPelajaranController extends Controller
             || str_contains($name, 'olahraga dan kesehatan');
     }
 
-    /**
-     * Memastikan 3 JP PJOK dapat menempati satu rentang 3 slot JP yang berdekatan
-     * pada hari yang sama. Slot istirahat tidak masuk daySlots, jadi JP 3 dan JP 5
-     * tetap dianggap berdekatan jika hanya dipisahkan istirahat.
-     */
-    private function pjokCanStillFitSameDay(int $classId, string $key, ?int $candidateSlotId = null): bool
+    private function isAgamaMapping(string $key): bool
     {
+        $name = mb_strtolower(trim((string) ($this->mappingInfo[$key]['nama_mapel'] ?? '')));
+        return str_contains($name, 'agama')
+            || trim($name) === 'pai'
+            || str_starts_with($name, 'pai ');
+    }
+
+    /** Kategori mapel yang wajib dijadwalkan dalam blok utuh 3 JP. */
+    private function requiredBlockType(string $key): ?string
+    {
+        if ($this->isPjokMapping($key)) return 'pjok';
+        if ($this->isAgamaMapping($key)) return 'agama';
+        return null;
+    }
+
+    private function isRequiredBlockMapping(string $key): bool
+    {
+        return $this->requiredBlockType($key) !== null;
+    }
+
+    /**
+     * Memastikan PJOK/Agama masih dapat menempati satu rentang 3 slot JP
+     * pada hari yang sama. Slot istirahat tidak masuk daySlots, sehingga
+     * jeda istirahat tidak memutus blok 3 JP.
+     */
+    private function requiredBlockCanStillFitSameDay(int $classId, string $key, ?int $candidateSlotId = null): bool
+    {
+        $type = $this->requiredBlockType($key);
+        if ($type === null) return false;
+
         $placed = [];
         foreach ($this->state['classAssignments'][$classId] ?? [] as $slotId => $existingKey) {
-            if ($this->isPjokMapping((string) $existingKey)) {
+            if ($this->requiredBlockType((string) $existingKey) === $type) {
                 $placed[] = (int) $slotId;
             }
         }
@@ -1007,10 +1099,17 @@ class JadwalPelajaranController extends Controller
         foreach ($candidateDays as $day) {
             $dayIds = array_values($this->daySlots[$day] ?? []);
             $count = count($dayIds);
-            // Cari rentang 3 slot JP berurutan; istirahat tidak dihitung sebagai slot JP.
             for ($i = 0; $i <= $count - 3; $i++) {
                 $window = array_slice($dayIds, $i, 3);
-                if (array_diff($placed, $window)) continue;
+
+                // Blok harus berurutan berdasarkan waktu, bukan sekadar urutan slot.
+                if (!$this->slotsContinuous($window)) {
+                    continue;
+                }
+
+                if (array_diff($placed, $window)) {
+                    continue;
+                }
 
                 $validWindow = true;
                 foreach ($window as $slotId) {
@@ -1031,37 +1130,44 @@ class JadwalPelajaranController extends Controller
         return false;
     }
 
-    /** Validasi akhir: tepat 3 JP PJOK per kelas dan menempati 3 slot JP berdekatan. */
-    private function validatePjokBlocksAllClasses(): bool
+    /** Validasi akhir: PJOK dan Agama masing-masing harus berupa blok utuh 3 JP. */
+    private function validateRequiredBlocksAllClasses(): bool
     {
+        $requiredTypes = ['pjok', 'agama'];
+
         foreach (array_keys($this->classDemand) as $classId) {
-            $pjokSlots = [];
-            foreach ($this->state['classAssignments'][$classId] ?? [] as $slotId => $key) {
-                if ($this->isPjokMapping((string) $key)) $pjokSlots[] = (int) $slotId;
-            }
-            if (count($pjokSlots) !== 3) return false;
+            foreach ($requiredTypes as $type) {
+                $blockSlots = [];
+                foreach ($this->state['classAssignments'][$classId] ?? [] as $slotId => $key) {
+                    if ($this->requiredBlockType((string) $key) === $type) {
+                        $blockSlots[] = (int) $slotId;
+                    }
+                }
 
-            $days = [];
-            foreach ($pjokSlots as $slotId) {
-                $day = $this->slots[$slotId]['hari'] ?? null;
-                if ($day === null) return false;
-                $days[] = $day;
-            }
-            if (count(array_unique($days)) !== 1) return false;
+                if (count($blockSlots) !== 3) return false;
 
-            $day = $days[0];
-            $dayIds = array_values($this->daySlots[$day] ?? []);
-            $positions = [];
-            foreach ($pjokSlots as $slotId) {
-                $position = array_search($slotId, $dayIds, true);
-                if ($position === false) return false;
-                $positions[] = $position;
-            }
-            sort($positions);
-            // Harus 3 slot JP berturut-turut; jeda istirahat diperbolehkan karena
-            // slot istirahat tidak termasuk dalam daftar daySlots.
-            if ($positions[1] !== $positions[0] + 1 || $positions[2] !== $positions[1] + 1) {
-                return false;
+                $days = [];
+                foreach ($blockSlots as $slotId) {
+                    $day = $this->slots[$slotId]['hari'] ?? null;
+                    if ($day === null) return false;
+                    $days[] = $day;
+                }
+                if (count(array_unique($days)) !== 1) return false;
+
+                $day = $days[0];
+                $dayIds = array_values($this->daySlots[$day] ?? []);
+                $positions = [];
+                foreach ($blockSlots as $slotId) {
+                    $position = array_search($slotId, $dayIds, true);
+                    if ($position === false) return false;
+                    $positions[] = $position;
+                }
+                sort($positions);
+
+                // Harus menempati 3 slot JP berurutan; slot istirahat tidak dihitung.
+                if ($positions[1] !== $positions[0] + 1 || $positions[2] !== $positions[1] + 1) {
+                    return false;
+                }
             }
         }
         return true;
@@ -1136,6 +1242,19 @@ class JadwalPelajaranController extends Controller
         return true;
     }
 
+    /** Menghitung jumlah mapel berbeda yang sudah terjadwal untuk satu kelas pada satu hari. */
+    private function countDistinctSubjectsOnDay(int $classId, string $day): int
+    {
+        $subjectIds = [];
+        foreach ($this->daySlots[$day] ?? [] as $slotId) {
+            $key = $this->state['classAssignments'][$classId][$slotId] ?? null;
+            if ($key === null) continue;
+            $subjectId = (int) ($this->mappingInfo[$key]['mapel_id'] ?? 0);
+            if ($subjectId > 0) $subjectIds[$subjectId] = true;
+        }
+        return count($subjectIds);
+    }
+
     private function getSubjectIndicesOnDay(int $classId, int $subjectId, string $day): array
     {
         $indices = [];
@@ -1168,4 +1287,163 @@ class JadwalPelajaranController extends Controller
         for ($i = $first + 1; $i <= $last; $i++) if (!$this->adjacentContinuous($ids[$i - 1], $ids[$i])) return false;
         return true;
     }
+
+    
+public function tukarJadwal(Request $request)
+{
+    $data = $request->validate([
+        'jadwal_id' => ['required', 'integer', 'exists:jadwal_pelajarans,id'],
+        'slot_tujuan_id' => ['required', 'integer', 'exists:slot_waktus,id'],
+        'tahun_ajaran' => ['required', 'regex:/^\d{4}\/\d{4}$/'],
+        'semester' => ['required', 'in:Ganjil,Genap'],
+    ]);
+
+    [$yearStart, $yearEnd] = explode('/', $data['tahun_ajaran']);
+
+    if ((int) $yearEnd !== (int) $yearStart + 1) {
+        return back()->with('error', 'Tahun ajaran tidak valid.');
+    }
+
+    // Fitur pengubahan jadwal hanya untuk Waka dan admin.
+    $role = strtolower((string) (auth()->user()->role ?? ''));
+
+    if (!in_array($role, ['waka', 'admin'], true)) {
+        abort(403, 'Kamu tidak memiliki izin untuk mengubah jadwal.');
+    }
+
+    try {
+        DB::transaction(function () use ($data) {
+            $jadwal = JadwalPelajaran::whereKey($data['jadwal_id'])
+                ->where('tahun_ajaran', $data['tahun_ajaran'])
+                ->where('semester', $data['semester'])
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $slotAsal = SlotWaktu::findOrFail($jadwal->slot_waktu_id);
+            $slotTujuan = SlotWaktu::findOrFail($data['slot_tujuan_id']);
+
+            // Perubahan hanya boleh menggunakan slot pelajaran.
+            if (
+                strtolower(trim((string) $slotAsal->jenis)) !== 'jp' ||
+                strtolower(trim((string) $slotTujuan->jenis)) !== 'jp'
+            ) {
+                throw new \RuntimeException(
+                    'Jadwal hanya dapat dipindahkan ke slot berjenis JP.'
+                );
+            }
+
+            if ((int) $slotAsal->getKey() === (int) $slotTujuan->getKey()) {
+                throw new \RuntimeException(
+                    'Pilih slot tujuan yang berbeda dari posisi sekarang.'
+                );
+            }
+
+            // Cari jadwal lain pada kelas yang sama dan slot tujuan.
+            $jadwalTujuan = JadwalPelajaran::where(
+                    'tahun_ajaran',
+                    $data['tahun_ajaran']
+                )
+                ->where('semester', $data['semester'])
+                ->where('kelas_id', $jadwal->kelas_id)
+                ->where('slot_waktu_id', $slotTujuan->getKey())
+                ->where('id', '!=', $jadwal->id)
+                ->lockForUpdate()
+                ->first();
+
+            $idJadwalTujuan = $jadwalTujuan?->id;
+
+            // Pastikan guru jadwal yang dipindahkan tidak bentrok
+            // dengan kelas lain pada slot tujuan.
+            $bentrokGuruTujuan = JadwalPelajaran::where(
+                    'tahun_ajaran',
+                    $data['tahun_ajaran']
+                )
+                ->where('semester', $data['semester'])
+                ->where('slot_waktu_id', $slotTujuan->getKey())
+                ->where('guru_id', $jadwal->guru_id)
+                ->where('id', '!=', $jadwal->id)
+                ->when(
+                    $idJadwalTujuan !== null,
+                    fn ($query) => $query->where('id', '!=', $idJadwalTujuan)
+                )
+                ->exists();
+
+            if ($bentrokGuruTujuan) {
+                throw new \RuntimeException(
+                    'Guru pada jadwal ini sudah mengajar di kelas lain pada slot tujuan.'
+                );
+            }
+
+            // Jika slot tujuan terisi, periksa apakah guru jadwal tujuan
+            // akan bentrok ketika dipindahkan ke slot asal.
+            if ($jadwalTujuan) {
+                $bentrokGuruAsal = JadwalPelajaran::where(
+                        'tahun_ajaran',
+                        $data['tahun_ajaran']
+                    )
+                    ->where('semester', $data['semester'])
+                    ->where('slot_waktu_id', $slotAsal->getKey())
+                    ->where('guru_id', $jadwalTujuan->guru_id)
+                    ->whereNotIn('id', [$jadwal->id, $jadwalTujuan->id])
+                    ->exists();
+
+                if ($bentrokGuruAsal) {
+                    throw new \RuntimeException(
+                        'Guru pada jadwal tujuan sudah mengajar di kelas lain pada slot asal.'
+                    );
+                }
+            }
+
+            // Simpan posisi awal untuk pertukaran.
+            $asal = [
+                'slot_waktu_id' => $slotAsal->getKey(),
+                'hari' => $slotAsal->hari,
+                'jam_mulai' => $slotAsal->jam_mulai,
+                'jam_selesai' => $slotAsal->jam_selesai,
+            ];
+
+            // Pindahkan jadwal pertama ke slot tujuan.
+            $jadwal->slot_waktu_id = $slotTujuan->getKey();
+            $jadwal->hari = $slotTujuan->hari;
+            $jadwal->jam_mulai = $slotTujuan->jam_mulai;
+            $jadwal->jam_selesai = $slotTujuan->jam_selesai;
+            $jadwal->save();
+
+            if ($jadwalTujuan) {
+                // Slot tujuan sudah terisi kelas yang sama:
+                // tukar kedua jadwal.
+                $jadwalTujuan->slot_waktu_id = $asal['slot_waktu_id'];
+                $jadwalTujuan->hari = $asal['hari'];
+                $jadwalTujuan->jam_mulai = $asal['jam_mulai'];
+                $jadwalTujuan->jam_selesai = $asal['jam_selesai'];
+                $jadwalTujuan->save();
+            }
+        });
+
+        session([
+            'tahun_ajaran_aktif' => $data['tahun_ajaran'],
+            'semester_aktif' => $data['semester'],
+        ]);
+
+        return redirect()
+            ->route('jadwal-pelajaran.show', [
+                'tahun_ajaran' => $data['tahun_ajaran'],
+                'semester' => $data['semester'],
+            ])
+            ->with('success', 'Perubahan jadwal berhasil disimpan.');
+
+    } catch (Throwable $e) {
+        if ($e instanceof \RuntimeException) {
+            return back()->with('error', $e->getMessage());
+        }
+
+        report($e);
+
+        return back()->with(
+            'error',
+            'Gagal mengubah jadwal. Periksa log Laravel untuk mengetahui detail kesalahannya.'
+        );
+    }
+}
+
 }

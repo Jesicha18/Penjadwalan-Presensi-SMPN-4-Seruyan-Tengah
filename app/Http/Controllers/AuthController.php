@@ -54,7 +54,7 @@ class AuthController extends Controller
                 ]);
             }
 
-            return redirect()->intended($dashboard);
+        return redirect($dashboard);        
         }
 
         return back()->withErrors([

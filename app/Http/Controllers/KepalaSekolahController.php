@@ -7,6 +7,11 @@ use App\Models\User;
 use App\Models\Kelas;
 use App\Models\Mapel;
 use App\Models\SlotWaktu;
+use App\Models\Guru;
+use App\Models\Siswa;
+use App\Models\PresensiGuru;
+use App\Models\PresensiSiswa;
+use Carbon\Carbon;
 
 use App\Models\JadwalPelajaran; // <-- Tambahkan baris import ini di bagian atas!// <-- Pastikan model Jadwal di-import di sini
 
@@ -105,8 +110,52 @@ public function melihatJadwal(Request $request)
         
         session(['tahun_ajaran_aktif' => $year, 'semester_aktif' => $semester]);
 
-        $kelasList = Kelas::where('is_active', 1)->orderBy('nama_kelas')->get();
-        $slotWaktuList = SlotWaktu::orderBy('urutan')->get();
+
+$kelasList = Kelas::where('is_active', 1)
+    ->orderBy('nama_kelas')
+    ->get();
+
+$slotWaktuList = SlotWaktu::orderBy('urutan')->get();
+
+// Baca jenis slot dari kolom yang tersedia di tabel slot_waktus.
+$slotWaktuList->each(function ($slot) {
+    $atribut = $slot->getAttributes();
+
+    $jenis = '';
+
+    foreach ([
+        'jenis_slot',
+        'jenis',
+        'tipe_slot',
+        'tipe',
+        'kategori_slot',
+        'kategori',
+        'jenis_waktu',
+        'tipe_waktu',
+        'status_slot',
+    ] as $kolom) {
+        if (isset($atribut[$kolom]) && trim((string) $atribut[$kolom]) !== '') {
+            $jenis = strtolower(trim((string) $atribut[$kolom]));
+            break;
+        }
+    }
+
+    // Antisipasi jika terkunci disimpan sebagai kolom boolean.
+    if (
+        $jenis === '' &&
+        (
+            !empty($atribut['is_terkunci']) ||
+            !empty($atribut['terkunci']) ||
+            !empty($atribut['is_locked'])
+        )
+    ) {
+        $jenis = 'terkunci';
+    }
+
+    // Properti sementara, tidak menyimpan atau mengubah database.
+    $slot->setAttribute('jenis_tampilan', $jenis);
+});
+
         
         $jadwalList = JadwalPelajaran::with(['mataPelajaran', 'guru', 'kelas', 'slotWaktu'])
             ->where('tahun_ajaran', $year)
@@ -141,4 +190,89 @@ public function melihatJadwal(Request $request)
             'listTahunAjaran'
         ));
     }
+    
+/**
+ * Rekapitulasi presensi siswa bulanan untuk Kepala Sekolah.
+ */
+
+/**
+ * Rekapitulasi presensi guru bulanan untuk Kepala Sekolah.
+ */
+
+public function melihatRekapPresensi(Request $request)
+{
+    $jenis = 'guru';
+
+    $bulan = (int) $request->input('bulan', now()->month);
+    $tahun = (int) $request->input('tahun', now()->year);
+
+    $request->validate([
+        'bulan' => 'nullable|integer|between:1,12',
+        'tahun' => 'nullable|integer|min:2000|max:2100',
+    ]);
+
+    $tanggalAwal = Carbon::createFromDate($tahun, $bulan, 1)
+        ->startOfMonth()
+        ->toDateString();
+
+    $tanggalAkhir = Carbon::createFromDate($tahun, $bulan, 1)
+        ->endOfMonth()
+        ->toDateString();
+
+    $guruList = Guru::query()
+        ->orderBy('nama')
+        ->get();
+
+    $rekapPresensi = PresensiGuru::query()
+        ->whereBetween('tanggal', [$tanggalAwal, $tanggalAkhir])
+        ->selectRaw("
+            guru_id,
+            SUM(CASE WHEN LOWER(status_kehadiran) = 'hadir'
+                THEN 1 ELSE 0 END) AS total_hadir,
+            SUM(CASE WHEN LOWER(status_kehadiran) = 'izin'
+                THEN 1 ELSE 0 END) AS total_izin,
+            SUM(CASE WHEN LOWER(status_kehadiran) = 'sakit'
+                THEN 1 ELSE 0 END) AS total_sakit,
+            SUM(CASE WHEN LOWER(status_kehadiran)
+                IN ('tidak hadir', 'alfa', 'alpha')
+                THEN 1 ELSE 0 END) AS total_tidak_hadir,
+            COUNT(*) AS total_presensi
+        ")
+        ->groupBy('guru_id')
+        ->get()
+        ->keyBy('guru_id');
+
+    $rekapList = $guruList->map(function ($guru) use ($rekapPresensi) {
+        $rekap = $rekapPresensi->get($guru->id);
+
+        return (object) [
+            'id' => $guru->id,
+            'nama' => $guru->nama,
+            'hadir' => (int) ($rekap->total_hadir ?? 0),
+            'izin' => (int) ($rekap->total_izin ?? 0),
+            'sakit' => (int) ($rekap->total_sakit ?? 0),
+            'tidak_hadir' => (int) ($rekap->total_tidak_hadir ?? 0),
+            'total_presensi' => (int) ($rekap->total_presensi ?? 0),
+        ];
+    });
+
+    $totalHadir = $rekapList->sum('hadir');
+    $totalIzin = $rekapList->sum('izin');
+    $totalSakit = $rekapList->sum('sakit');
+    $totalTidakHadir = $rekapList->sum('tidak_hadir');
+
+    return view('kepala-sekolah.melihat-rekap', compact(
+        'bulan',
+        'tahun',
+        'rekapList',
+        'totalHadir',
+        'totalIzin',
+        'totalSakit',
+        'totalTidakHadir',
+        'jenis'
+    ));
+}
+
+
+
 }

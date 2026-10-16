@@ -147,7 +147,7 @@
             <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#0C4A80] via-[#1162A8] to-[#1E7CD0] p-6 md:p-8 text-white shadow-lg">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
-                        <h1 class="text-2xl font-bold tracking-tight">Selamat Datang, Wakasek Kurikulum! 👋</h1>
+                        <h1 class="text-2xl font-bold tracking-tight">Selamat Datang, Wakasek Kurikulum!</h1>
                         <p class="text-blue-100 text-xs mt-1">Semangat hari ini!</p>
                     </div>
                     <div>
@@ -221,10 +221,9 @@
                     <div class="grid grid-cols-7 gap-1 text-center text-[10px] text-slate-400 font-bold mb-2">
                         <span>Senin</span><span>Selasa</span><span>Rabu</span><span>Kamis</span><span>Jumat</span><span>Sabtu</span><span>Minggu</span>
                     </div>
-                    <div id="calendar-days" class="grid grid-cols-7 gap-1 text-center text-[11px] font-semibold text-slate-700">
-                        <!-- Rendered by JS -->
-                    </div>
-                </div>
+<div id="calendar-days" class="grid grid-cols-7 gap-2 text-center text-[11px] font-semibold text-slate-700">
+    <!-- Tanggal kalender ditampilkan melalui JavaScript -->
+</div>
             </div>
 
         </main>
@@ -235,46 +234,82 @@
     <script>
         let currentDate = new Date();
 
-        function renderCalendar() {
-            const year = currentDate.getFullYear();
-            const month = currentDate.getMonth();
+        
+function renderCalendar() {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
 
-            const monthNames = [
-                "Januari", "Februari", "Maret", "April", "Mei", "Juni", 
-                "Juli", "Agustus", "September", "Oktober", "November", "Desember"
-            ];
+    const monthNames = [
+        "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+        "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+    ];
 
-            document.getElementById('calendar-month-year').innerText = `${monthNames[month]} ${year}`;
+    document.getElementById('calendar-month-year').innerText =
+        `${monthNames[month]} ${year}`;
 
-            const daysContainer = document.getElementById('calendar-days');
-            daysContainer.innerHTML = '';
+    const daysContainer = document.getElementById('calendar-days');
+    daysContainer.innerHTML = '';
 
-            const firstDayIndex = (new Date(year, month, 1).getDay() + 6) % 7;
-            const totalDays = new Date(year, month + 1, 0).getDate();
+    // Menentukan posisi tanggal pertama, dengan Senin sebagai awal minggu
+    const firstDayIndex = (new Date(year, month, 1).getDay() + 6) % 7;
+    const totalDays = new Date(year, month + 1, 0).getDate();
 
-            const today = new Date();
-            const isCurrentMonth = today.getFullYear() === year && today.getMonth() === month;
-            const currentDay = today.getDate();
+    const today = new Date();
+    const isCurrentMonth =
+        today.getFullYear() === year &&
+        today.getMonth() === month;
 
-            for (let i = 0; i < firstDayIndex; i++) {
-                const emptySpan = document.createElement('span');
-                emptySpan.className = 'py-2';
-                daysContainer.appendChild(emptySpan);
-            }
+    const currentDay = today.getDate();
 
-            for (let day = 1; day <= totalDays; day++) {
-                const daySpan = document.createElement('span');
-                daySpan.innerText = day;
+    // Membuat kotak kosong sebelum tanggal 1
+    for (let i = 0; i < firstDayIndex; i++) {
+        const emptyCell = document.createElement('div');
 
-                if (isCurrentMonth && day === currentDay) {
-                    daySpan.className = 'py-2 bg-blue-600 text-white rounded-lg shadow-sm font-bold block';
-                } else {
-                    daySpan.className = 'py-2 hover:bg-slate-200 rounded-lg cursor-pointer transition block';
-                }
+        emptyCell.className =
+            'min-h-[42px] rounded-lg border border-transparent';
 
-                daysContainer.appendChild(daySpan);
-            }
+        daysContainer.appendChild(emptyCell);
+    }
+
+    // Membuat setiap tanggal dalam kotak tersendiri
+    for (let day = 1; day <= totalDays; day++) {
+        const dayCell = document.createElement('div');
+        dayCell.innerText = day;
+
+        dayCell.className = `
+            min-h-[42px]
+            flex items-center justify-center
+            rounded-lg
+            border
+            transition-all
+            duration-200
+            cursor-pointer
+        `;
+
+        if (isCurrentMonth && day === currentDay) {
+            // Kotak khusus untuk tanggal hari ini
+            dayCell.classList.add(
+                'bg-blue-600',
+                'border-blue-600',
+                'text-white',
+                'font-extrabold',
+                'shadow-md'
+            );
+        } else {
+            // Kotak untuk tanggal lainnya
+            dayCell.classList.add(
+                'bg-white',
+                'border-slate-200',
+                'text-slate-700',
+                'hover:border-blue-400',
+                'hover:bg-blue-50'
+            );
         }
+
+        daysContainer.appendChild(dayCell);
+    }
+}
+
 
         function goToCurrentMonth() {
             currentDate = new Date();
