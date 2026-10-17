@@ -184,9 +184,9 @@
                         </div>
 
                         <div>
-                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Jumlah Jam Pelajaran (JP) / Minggu <span class="text-[#2582E5] font-semibold">(Otomatis sesuai standar)</span></label>
-                            <input type="number" name="jumlah_jp" id="jumlah_jp" placeholder="Pilih mata pelajaran terlebih dahulu" value="{{ old('jumlah_jp') }}" class="w-full px-4 py-3.5 bg-slate-100 border border-slate-200 rounded-xl text-xs text-slate-600 focus:outline-none cursor-not-allowed" readonly required>
-                            <p class="text-[11px] text-slate-400 mt-1">Jam pelajaran terkunci otomatis berdasarkan acuan kurikulum mapel terpilih.</p>
+                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Jumlah Jam Pelajaran (JP) / Minggu <span class="text-[#2582E5] font-semibold">(Otomatis, bisa diubah)</span></label>
+                            <input type="number" name="jumlah_jp" id="jumlah_jp" min="1" max="50" step="1" placeholder="Pilih mata pelajaran terlebih dahulu" value="{{ old('jumlah_jp') }}" class="w-full px-4 py-3.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all" required>
+                            <p class="text-[11px] text-slate-400 mt-1">Jumlah JP terisi otomatis berdasarkan standar saat mata pelajaran dipilih. Kamu tetap bisa mengubahnya sesuai kebutuhan sekolah.</p>
                         </div>
 
                         <!-- Tombol Aksi di Kanan Bawah -->
@@ -245,8 +245,14 @@
         selectMapel.addEventListener('change', updateJP);
 
         document.addEventListener("DOMContentLoaded", function() {
-            if(selectMapel.value) {
+            // Jika form dibuka kembali setelah validasi gagal, pertahankan
+            // jumlah JP yang sudah diisi pengguna.
+            const jumlahJpSebelumnya = @json(old('jumlah_jp'));
+
+            if (selectMapel.value && (jumlahJpSebelumnya === null || jumlahJpSebelumnya === '')) {
                 updateJP();
+            } else if (!selectMapel.value) {
+                inputJp.value = '';
             }
         });
     </script>

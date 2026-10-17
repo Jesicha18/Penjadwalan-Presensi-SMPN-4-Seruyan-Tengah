@@ -126,12 +126,11 @@
         <div class="w-full max-w-[1600px] mx-auto space-y-6">
             <header class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 no-print">
                 <div>
-                    <p class="text-[10px] uppercase tracking-[0.2em] font-extrabold text-blue-600 mb-2">SIPAS · Monitoring Akademik</p>
                     <h2 class="text-2xl font-extrabold tracking-tight text-slate-900">Rekapitulasi Presensi</h2>
                     <p class="text-xs text-slate-400 mt-1">Pantau dan tinjau laporan kehadiran guru maupun siswa.</p>
                 </div>
                 <div class="flex flex-wrap items-center gap-3">
-                    <button type="button" onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm">▣ Cetak Rekap</button>
+                    <button type="button" onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-sm">Cetak Rekap</button>
                     <a href="{{ route('dashboard.kepala-sekolah') }}" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold transition-all border border-slate-200">Kembali ke Dashboard</a>
                 </div>
             </header>
@@ -145,7 +144,6 @@
                             <h3 class="text-lg font-extrabold mt-1">Presensi Siswa</h3>
                             <p class="text-xs mt-1 {{ $jenis === 'siswa' ? 'text-blue-100' : 'text-slate-500' }}">Lihat kehadiran siswa berdasarkan kelas.</p>
                         </div>
-                        <span class="text-3xl">♙</span>
                     </div>
                 </a>
                 <a href="{{ request()->url() . '?' . http_build_query(array_merge(request()->query(), ['jenis' => 'guru'])) }}"
@@ -156,7 +154,6 @@
                             <h3 class="text-lg font-extrabold mt-1">Presensi Guru</h3>
                             <p class="text-xs mt-1 {{ $jenis === 'guru' ? 'text-blue-100' : 'text-slate-500' }}">Lihat ringkasan kehadiran tenaga pendidik.</p>
                         </div>
-                        <span class="text-3xl">♧</span>
                     </div>
                 </a>
             </section>
